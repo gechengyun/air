@@ -1,0 +1,233 @@
+<template>
+ <div class='points'>
+     <el-form :inline="true" :model="formInline" class="demo-form-inline">
+      <el-form-item label="项目">
+        <el-select v-model="formInline.projectId" placeholder="项目">
+        <el-option label="全部" value=""></el-option>
+        <el-option
+         v-for="item in project"
+         :key="item.id"
+         :label="item.projectName"
+         :value="item.id"
+         ></el-option>
+        </el-select>  
+     </el-form-item>
+     <el-form-item label="站点">
+        <el-select v-model="formInline.airStationId" placeholder="站点">
+         <el-option label="全部" value=""></el-option>
+          <el-option
+         v-for="item in stations"
+         :key="item.id"
+         :label="item.name"
+         :value="item.id"
+         ></el-option>
+        </el-select>
+        
+       
+    </el-form-item>
+     <el-form-item label="测点类型">
+        <el-select v-model="formInline.observationType" placeholder="测点类型">
+           <el-option label="全部" value=""></el-option>
+           <el-option
+         v-for="item in points"
+         :key="item.id"
+         :label="item.value"
+         :value="item.id"
+         ></el-option>
+        </el-select>   
+    </el-form-item>
+    <el-form-item>
+    <el-input v-model="formInline.name" placeholder="请输入测点名称"></el-input>
+  </el-form-item>
+    <el-form-item>
+        <el-button type="primary" @click="query()">搜索</el-button>
+    </el-form-item>
+    <el-form-item>
+        <el-button type="primary"  @click="$router.push({path: 'points/addpoints'})">新增测点</el-button>
+    </el-form-item>
+    <el-form-item>
+        <el-button>批量导入测点</el-button>
+    </el-form-item>
+     <el-form-item>
+        <el-button>批量导出测点</el-button>
+    </el-form-item> 
+    </el-form>
+     <el-table
+    :data="tableData"
+     v-loading="loading"
+    style="width: 100%">
+     <el-table-column
+      type="index"
+      label="序号"
+      width="50">
+    </el-table-column>
+    <el-table-column
+      prop="code"
+      label="测点编码"
+     >
+    </el-table-column>
+    <el-table-column
+      prop="name"
+      label="测点名称"
+     >
+    </el-table-column>
+    <el-table-column
+      prop="projectName"
+      label="归属项目">
+    </el-table-column>
+     <el-table-column
+      prop="airStationName"
+      label="归属空调站点">
+    </el-table-column>
+     <el-table-column
+      label="状态"
+      >
+      <template slot-scope="scope">
+      <el-tag
+          :type="scope.row.state === 2 ? 'danger' : 'success'"
+          close-transition>{{scope.row.state === 2 ?' 禁用':'启用'}}</el-tag>
+      </template>
+    </el-table-column>
+    <el-table-column
+      label="操作"
+      >
+      <template slot-scope="scope">
+        <el-button type="text" @click="isState(scope.row.state,scope.row.id)" size="small">{{scope.row.state===2?'启用':'禁用'}}</el-button>
+         <el-button type="text" @click="$router.push({path: 'points/addpoints/'+scope.row.id,query:{page:currentPage}})" size="small" v-show="scope.row.state === 2 ? false:true">编辑</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+   
+     <el-pagination
+      background
+       v-show="pageShow"
+      style="text-align:center;" class="mt20"
+      @current-change="handleCurrentChange"
+      :current-page.sync="currentPage"
+      :page-size="currentPageSize"
+      layout="prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+ </div>
+</template>
+<script>
+import {getUserProjects,getObservationLocationDict,pointslist,pointsdisable,pointsenable,stationGetListBy} from '../../config/api'
+  export default {
+    data() {
+      return {
+        formInline: {
+          projectId:'',
+          airStationId:'',
+          observationType:'',
+          name:'',
+        },
+        loading:true,
+         project:[],
+         points:[],
+         tableData: [],
+         stations:[],
+         // 分页
+        pageShow:false,
+        total: 0,
+        currentPage: this.$route.query.page==undefined?1:this.$route.query.page,
+        currentPageSize: 10,
+      }
+    },
+     created () {
+      this.getSelectValue();
+      this.pointslist();
+    },
+    methods: {
+      getSelectValue(){
+       getUserProjects().then((resp)=>{
+         this.project=resp.data
+       })
+       getObservationLocationDict().then((resp)=>{
+         this.points=resp.data
+       }),
+      stationGetListBy().then((resp)=>{
+          this.stations=resp.data
+       })
+       },
+       //查询
+       query(){
+          this.loading=true;
+           this.currentPage = 1;
+          this.pointslist()
+       },
+      pointslist(){
+        pointslist({
+          projectId:this.formInline.projectId,
+          airStationId:this.formInline.airStationId,
+          name :this.formInline.name,
+          observationType:this.formInline.observationType, 
+          pageSize:this.currentPageSize,
+          pageIndex:this.currentPage
+        }).then((resp) => {
+            this.loading=false;
+            if(resp.code=="1"){
+                this.tableData=resp.data.list
+                this.total = parseInt(resp.data.total);
+                if(this.total>10){
+                  this.pageShow=true
+                }else{
+                    this.pageShow=false
+                }
+              }else{
+                this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+              }
+            });
+         
+         },
+       
+      //分页
+      handleCurrentChange(val) {
+         this.loading=true      
+         this.currentPage = val;
+         this.pointslist();
+      },
+
+      //禁用 启用
+      isState(state,id){
+         if(state==2){
+           pointsenable({id:id}).then((resp)=>{
+              if(resp.code==1){
+                this.$message({
+                type: 'success',
+                message: '启用成功!',
+                duration:1000
+              });
+               this.pointslist();
+              }else{
+                 this.$alert('启用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+              }
+           })
+         }else{
+           pointsdisable({id:id}).then((resp)=>{
+               if(resp.code==1){
+                this.$message({
+                type: 'success',
+                message: '禁用成功!',
+                duration:1000
+              });
+               this.pointslist();
+              }else{
+                 this.$alert('禁用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+              }
+           })
+         }
+      },
+      add(){
+         router.push({
+              path: 'points/addpoints'
+          })
+      },
+     
+    }
+  }
+</script>
+<style scoped>
+     .el-select{
+         width:160px
+     }
+</style>

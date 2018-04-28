@@ -1,0 +1,8 @@
+<template>
+ <div class='station'>
+    <el-row>
+     <el-col :span="24">空调站点管理</el-col>
+    </el-row>
+
+ </div>
+</template>

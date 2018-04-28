@@ -1,0 +1,17 @@
+<template>
+ <div class='report'>
+    <el-row>
+     <el-col :span="24"><div class="grid-content bg-purple-dark" style="border:1px solid red" id='a'><el-button type="primary" @click="layerview()">报表管理</el-button></div></el-col>
+    </el-row>
+
+ </div>
+</template>
+<script>
+ export default{
+     methods:{
+         layerview(){
+             layer.alert('内容')
+         }
+     }
+ }
+</script>

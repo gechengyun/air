@@ -1,0 +1,302 @@
+<template>
+  <div class='user'>
+    <el-row>
+      <el-col :span="6">
+        <el-tree
+          :data="treeData"
+          v-loading="treeLoading"
+          node-key="id"
+          default-expand-all
+          highlight-current
+          ref="tree"
+          :expand-on-click-node="false"
+          @node-click="handleNodeClick"
+          :props="defaultProps" />
+      </el-col>
+      <el-col :span="18" style="padding-left:20px">
+        <el-form
+          :inline="true"
+          :model="formInline"
+          ref="formInline"
+          class="demo-form-inline">
+          <el-form-item label="用户姓名">
+            <el-input
+              v-model.trim="formInline.name"
+              placeholder="请输入用户名称" />
+          </el-form-item>
+          <el-form-item label="注册时间">
+            <el-date-picker
+              v-model="formInline.time"
+              type="daterange"
+              format="yyyy-MM-dd"
+              value-format="yyyy-MM-dd"
+              range-separator="至"
+              start-placeholder="请选择起始时间"
+              end-placeholder="请选择结束时间" />
+          </el-form-item>
+          <el-form-item>
+            <el-button
+              type="primary"
+              @click="getPageList()"
+              :disabled="disabled">查询</el-button>
+            <el-button
+              type="primary"
+              :disabled="disabled"
+              @click="resetForm('formInline')"
+              plain>重置</el-button>
+            <el-button
+              @click="$router.push({path: '/user/addUser/0', query: {page: currentPage}})"
+              type="primary">新增用户</el-button>
+          </el-form-item>
+        </el-form>
+        <el-table
+          :data="list"
+          v-loading="loading"
+          style="width: 100%">
+          <el-table-column
+            prop="phone"
+            label="用户账号" />
+          <el-table-column
+            prop="realname"
+            label="用户姓名" />
+          <el-table-column
+            prop="phone"
+            label="用户电话" />
+          <el-table-column
+            prop="duty"
+            label="角色" />
+          <el-table-column
+            prop="ctime"
+            label="注册时间" />
+          <el-table-column
+            prop="state"
+            label="用户状态">
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.state == 1 ? 'success' : 'danger'" close-transition>
+                {{scope.row.state == 1 ? '启用' : '禁用'}}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            width="300"
+            fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/user/addUser/' + scope.row.id,
+                  query: {page: currentPage}
+                })">修改</el-button>
+              <el-button
+                size="small"
+                @click="deleteAction(scope.row.id)"
+                type="text">删除</el-button>
+              <el-button
+                size="small"
+                @click="scope.row.state == 1 ? disableState(scope.row.id) : enableState(scope.row.id)"
+                type="text">{{scope.row.state == 1 ? '禁用' : '启用'}}</el-button>
+              <el-button
+                size="small"
+                @click="resetPwd(scope.row.id)"
+                type="text">密码重置</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-row v-if="total > currentPageSize">
+          <el-col :span="24">
+            <el-pagination
+              background
+              style="text-align:center" class="mt20"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page.sync="currentPage"
+              :page-size="currentPageSize"
+              layout="prev, pager, next, jumper"
+              :total="total">
+            </el-pagination>
+          </el-col>
+        </el-row>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+<script>
+  import {
+    userGetPageList,
+    userDisableState,
+    userEnableState,
+    userResetPwd,
+    userDelete,
+    userGetListBy
+  } from '../../config/api'
+  export default {
+    data() {
+      return {
+        formInline: {
+          name: '', // 用户名
+          time: [] // 注册时间
+        },
+        treeData: [], // 树状数据
+        defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+        list: [], // 列表
+        treeLoading: true, // tree列表loading
+        loading: true, // loading
+        disabled: false, // 防止二次点击
+        currentPage: Number(this.$route.query.page) || 1, // 页码
+        currentPageSize: 10, // 每页数目
+        total: 0, // 总项目数
+        pid: 0, // 父Id
+      }
+    },
+    methods: {
+      setCurrentKey () {
+        // 获取树状列表
+        this.getPageList()
+      },
+      resetForm (formName) {
+        // 重置搜索条件
+        this.$refs[formName].resetFields()
+        Object.assign(this.formInline, {
+          name: '',
+          time: []
+        })
+        this.getPageList()
+      },
+      getPageList () {
+        // 获取用户列表
+        userGetPageList({
+          pageIndex: this.currentPage,
+          pageSize: this.currentPage,
+          pid: this.pid,
+          registerEndTime: this.formInline.time[1] || '',
+          registerStartTime: this.formInline.time[0] || '',
+          userName: this.formInline.name
+        }).then(res => {
+          if (Number(res.code != 1)) {
+            this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          } else {
+            this.list = res.data.list
+            this.total = res.data.total
+            this.currentPage = res.data.pageNum
+            this.currentPageSize = res.data.pageSize
+          }
+          this.disabled = false
+          this.loading = false
+        }).catch(err =>{
+          this.disabled = false
+          this.loading = false
+        })
+      },
+      handleNodeClick(data) {
+        // 树状图操作
+        console.log(data)
+      },
+      handleSizeChange (val) {
+      this.currentPage = 1
+      this.currentPageSize = val
+      this.getPageList()
+      },
+      handleCurrentChange (val) {
+        this.currentPage = val
+        this.getPageList()
+      },
+      disableState (userId) {
+        // 禁用用户
+        this.$confirm('是否确定禁用该用户?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          userDisableState({
+            id: userId
+          }).then(res => {
+            if (Number(res.code) != 1)
+              return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+            this.getAllList()
+            this.$message({
+              message: '禁用成功',
+              type: 'success',
+              duration: 2000
+            })
+          }).catch(() => {})
+        }).catch(err => {})
+      },
+      enableState (userId) {
+        // 启用用户
+        userEnableState({
+          id: userId
+        }).then(res => {
+          if (Number(res.code) != 1)
+            return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          this.getAllList()
+          this.$message({
+            message: '启用成功',
+            type: 'success',
+            duration: 2000
+          })
+        }).catch(err => {})
+      },
+      resetPwd (userId) {
+        this.$confirm('是否确定禁用该用户?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          userResetPwd({
+            id: userId
+          }).then(res => {
+            if (Number(res.code) != 1)
+              return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+            this.getAllList()
+            this.$message({
+              message: '用户密码已被重置为123456，请及时提醒用户登录修改密码',
+              type: 'success',
+              duration: 2000
+            })
+          }).catch(() => {})
+        }).catch(err => {})
+      },
+      deleteAction (userId) {
+        // 用户软删除
+        this.$confirm('是否确定删除该用户?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          userDelete({
+            id: userId
+          }).then(res => {
+            if (Number(res.code) != 1)
+              return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+            this.getAllList()
+            this.$message({
+              message: '删除用户成功',
+              type: 'success',
+              duration: 2000
+            })
+          }).catch(() => {})
+        }).catch(err => {})
+      },
+      getListBy (fId) {
+        // 获取树状列表
+        userGetListBy({
+          id: fId
+        }).then(res => {
+          this.treeLoading = false
+        }).catch(err => {
+          this.treeLoading = false
+        })
+      }
+    },
+    created () {
+      this.setCurrentKey() // 获取默认用户列表
+      this.getListBy(0) // 获取最外层树状列表
+    }
+  }
+
+</script>

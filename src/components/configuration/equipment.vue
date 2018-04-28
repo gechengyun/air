@@ -1,0 +1,251 @@
+<template>
+ <div class='equipment'>
+     <el-form :inline="true" :model="formInline" class="demo-form-inline">
+      <el-form-item label="项目">
+        <el-select v-model="formInline.projectId" placeholder="项目">
+        <el-option label="全部" value=""></el-option>
+        <el-option
+         v-for="item in project"
+         :key="item.id"
+         :label="item.projectName"
+         :value="item.id"
+         ></el-option>
+
+
+        </el-select>  
+     </el-form-item>
+     <el-form-item label="站点">
+        <el-select v-model="formInline.airStationId" placeholder="站点">
+        <el-option label="全部" value=""></el-option>
+         <el-option
+         v-for="item in stations"
+         :key="item.id"
+         :label="item.name"
+         :value="item.id"
+         ></el-option>
+        </el-select>
+        
+       
+    </el-form-item>
+     <el-form-item label="设备类型">
+        <el-select v-model="formInline.equipmentType" placeholder="设备类型">
+           <el-option label="全部" value=""></el-option>
+           <el-option
+         v-for="item in type"
+         :key="item.id"
+         :label="item.value"
+         :value="item.id"
+         ></el-option>
+        </el-select>   
+    </el-form-item>
+    <el-form-item>
+    <el-input v-model="formInline.name" placeholder="请输入设备名称"></el-input>
+  </el-form-item>
+    <el-form-item>
+        <el-button type="primary" @click="query()">搜索</el-button>
+    </el-form-item>
+    <el-form-item>
+        <el-button type="primary" @click="$router.push({path: 'equipment/addequipment'})">新增设备</el-button>
+    </el-form-item>
+    <el-form-item>
+        <el-button>批量导入设备</el-button>
+    </el-form-item>
+     <el-form-item>
+        <el-button>导出全部联网设备</el-button>
+    </el-form-item>
+  
+    </el-form>
+     <el-table
+    :data="tableData"
+    v-loading="loading"
+    style="width: 100%">
+      <el-table-column
+      type="index"
+      label="序号"
+      width="50">
+    </el-table-column>
+    <el-table-column
+      prop="name"
+      label="设备名称"
+    >
+    </el-table-column>
+     <el-table-column
+      prop="equipmentTypeName"
+      label="设备类型"
+    >
+    </el-table-column>
+    <el-table-column
+      prop="projectName"
+      label="归属项目"
+      >
+    </el-table-column>
+    <el-table-column
+      prop="airStationName"
+      label="归属空调站点">
+    </el-table-column>
+     <el-table-column
+      label="状态" 
+       >
+       <template slot-scope="scope">
+      <el-tag
+          :type="scope.row.state === 2 ? 'danger' : 'success'"
+          close-transition>{{scope.row.state === 2 ?' 禁用':'启用'}}</el-tag>
+      </template>
+    </el-table-column>
+    <el-table-column
+      label="操作"
+      width="100">
+      <template slot-scope="scope">
+        <el-button type="text" @click="isState(scope.row.state,scope.row.id)" size="small">{{scope.row.state===2?'启用':'禁用'}}</el-button>
+        <el-button type="text" size="small" @click="$router.push({path: 'equipment/addequipment/'+scope.row.id,query:{page:currentPage}})" v-show="scope.row.state === 2 ? false:true">编辑</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+    <el-pagination
+      background
+      v-show="pageShow"
+      style="text-align:center;" class="mt20"
+      @current-change="handleCurrentChange"
+      :current-page.sync="currentPage"
+      :page-size="currentPageSize"
+      layout="prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+ </div>
+</template>
+<script>
+ import {equipmentlist,getUserProjects,getEquipmentDict,equipmentdisable,equipmentenable,stationGetListBy} from '../../config/api'
+  export default {
+    data() {
+      return {
+        formInline: {
+          projectId:'',
+          airStationId:'',
+          equipmentType:'',
+          name:'',
+        },
+        loading:true,
+        project:[],
+        type:[],
+        stations:[],
+        tableData: [],
+         // 分页
+        pageShow:false,
+        total: 0,
+        currentPage: this.$route.query.page==undefined?1:this.$route.query.page,
+        currentPageSize: 10,
+    
+      }
+    },
+    created () {     
+      this.getSelectValue();
+      this.equipmentlist();
+    },
+    methods: {
+       getSelectValue(){
+       getUserProjects().then((resp)=>{
+         this.project=resp.data
+       }),
+       getEquipmentDict().then((resp)=>{
+          this.type=resp.data
+       })
+       stationGetListBy().then((resp)=>{
+          this.stations=resp.data
+       })
+       },
+       //查询
+       query(){
+          this.loading=true;
+          this.currentPage = 1;
+          this.equipmentlist()
+       },
+       equipmentlist(){
+          equipmentlist({
+                airStationId:this.formInline.airStationId,
+                equipmentType:this.formInline.equipmentType,
+                name :this.formInline.name,
+                projectId:this.formInline.projectId, 
+                pageSize:this.currentPageSize,
+                pageIndex:this.currentPage
+              }).then((resp) => {
+                this.loading=false;
+            if(resp.code=="1"){
+                this.tableData=resp.data.list
+                this.total = parseInt(resp.data.total);
+                if(this.total>10){
+                  this.pageShow=true
+                }else{
+                    this.pageShow=false
+                }
+              }else{
+                this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+              }
+            });
+         
+         },
+           //禁用 启用
+        isState(state,id){
+          if(state==2){
+            equipmentenable({id:id}).then((resp)=>{
+                if(resp.code==1){
+                  this.$message({
+                  type: 'success',
+                  message: '启用成功!',
+                  duration:1000
+                });
+                this.equipmentlist();
+                }else{
+                  this.$alert('启用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+          }else{
+            equipmentdisable({id:id}).then((resp)=>{
+                if(resp.code==1){
+                  this.$message({
+                  type: 'success',
+                  message: '禁用成功!',
+                  duration:1000
+                });
+                this.equipmentlist();
+                }else{
+                  this.$alert('禁用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+          }
+        },
+      //删除
+      // deletes(id){ 
+      //   this.$confirm('是否将永久删除该设备, 是否继续?', '提示', {
+      //     confirmButtonText: '确定',
+      //     cancelButtonText: '取消',
+      //     type: 'warning'
+      //   }).then(() => {
+      //      equipmentdelete({id:id}).then((resp)=>{
+      //     if(resp.code==1){
+      //        this.$message({
+      //       type: 'success',
+      //       message: '删除成功!',
+      //       duration:1000
+      //     });
+      //     this.equipmentlist();
+      //     }else{
+      //         this.$alert('删除失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+      //     }
+      //       })
+         
+      //   }).catch(() => {});
+      // },
+      //分页
+      handleCurrentChange(val) {
+         this.loading=true      
+         this.currentPage = val;
+         this.equipmentlist();
+      }
+    }
+  }
+</script>
+<style scoped>
+     .el-select{
+         width:160px
+     }
+</style>

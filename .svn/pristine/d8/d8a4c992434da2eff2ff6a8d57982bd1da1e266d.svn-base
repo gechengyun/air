@@ -1,0 +1,235 @@
+<template>
+  <div class="register">
+    <h2>注册</h2>
+    <el-form ref="registerForm" :model="registerForm" :rules="rules">
+      <el-form-item prop="mobile">
+        <el-input
+          type="text"
+          maxlength="11"
+          placeholder="请输入手机号" 
+          prefix-icon="el-icon-phone" 
+          v-model.trim="registerForm.mobile"
+          clearable>
+        </el-input>
+      </el-form-item>
+      <el-form-item prop="msm">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="17">
+            <el-input
+              type="text"
+              placeholder="请输入验证码" 
+              prefix-icon="el-icon-view" 
+              v-model.trim="registerForm.msm"
+              clearable>
+            </el-input>
+          </el-col>
+          <el-col :span="6">
+            <el-button v-if="isCount" style="width: 110px" disabled>倒计时{{ this.count }}s</el-button>
+            <el-button @click="getCode" type="primary" style="width: 110px" v-else>获取验证码</el-button>
+          </el-col>
+        </el-row>
+      </el-form-item>
+      <el-form-item prop="name">
+        <el-input 
+          placeholder="请输入真实姓名" 
+          prefix-icon="el-icon-menu" 
+          v-model.trim="registerForm.name"
+          clearable>
+        </el-input>
+      </el-form-item>
+      <el-form-item prop="code">
+        <el-input
+          type="password"
+          placeholder="请输入密码，6-20位英文或数字" 
+          prefix-icon="el-icon-mobile-phone" 
+          v-model.trim="registerForm.code"
+          clearable>
+        </el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button class="register-button" type="primary" @click="submitForm('registerForm')" :disabled="disabled">注册</el-button>
+      </el-form-item>
+      <el-form-item>
+        <span class="to-login a" @click="$router.push('/login')">我有账号直接去登录</span>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<script>
+  import {
+    userRegister,
+    getMSM
+  } from '../../config/api'
+  export default {
+    name: 'register',
+    data() {
+      // 手机验证
+      var checkMobile = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入手机号'));
+        }
+        setTimeout(() => {
+          if (!/1\d{10}/.test(value)) {
+            callback(new Error('请输入正确的手机号'));
+          }
+          callback()
+        }, 1000);
+      };
+      // 验证码验证
+      var checkMsm = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入验证码'));
+        }
+        setTimeout(() => {
+          if (!/\d{4}/.test(value)) {
+            callback(new Error('验证码格式错误！'));
+          }
+          callback()
+        }, 1000);
+      }
+      // 密码验证
+      var checkCode =  (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入密码'));
+        }
+        setTimeout(() => {
+          if (!/[a-zA-Z0-9]{6,20}/.test(value)) {
+            callback(new Error('密码为6-20位英文或数字'));
+          }
+          callback()
+        }, 1000);
+      }
+      return {
+        registerForm: {
+          mobile: '', // 用户手机号
+          msm: '', // 验证码
+          name: '', // 用户名
+          code: '', // 密码
+        },
+        disabled: false, // disabled
+        rules: {
+          mobile: [{ validator: checkMobile, trigger: 'blur' }],
+          msm: [{ validator: checkMsm, trigger: 'blur' }],
+          name: [
+            { required: true, message: '请输入用户名', trigger: 'blur' },
+            { min: 2, max: 20, message: '用户名为2-20个字符', trigger: 'blur' }
+          ],
+          code: [{ validator: checkCode, trigger: 'blur'}]
+        },
+        isCount: false, // 是否点击
+        count: 60, // 60s
+        timer: null // 定时器
+      }
+    },
+    methods: {
+      getCode () {
+        // 获取验证码
+        this.$refs['registerForm'].validateField('mobile', (valid) => {
+          if (/1\d{10}/.test(this.registerForm.mobile)) {
+            this.countDown()
+            getMSM({
+              mobile: this.registerForm.mobile
+            }).then((res) => {
+              // 短信发送成功
+            }).catch((err) => {})
+          } else {
+            this.$message({
+              message: '请输入正确的手机号码',
+              type: 'warning',
+              duration: 2000
+            })
+          }
+        })
+      },
+      countDown () {
+        // 倒计时 60 秒
+        if (!this.isCount) {
+          this.isCount = true
+          this.timer = setInterval(() => {
+            if (this.count == 0) {
+              this.count = 60
+              this.isCount = false
+              clearInterval(this.timer)
+            } else {
+              this.count--
+            }
+          }, 1000)
+        }
+      },
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          // 注册
+          if (!/1\d{10}/.test(this.registerForm.mobile))
+            return console.log('请输入正确的手机号！')
+          if (!/\d{4}/.test(this.registerForm.msm))
+            return console.log('验证码格式错误！')
+          if (!/[\s\S]{2,20}/.test(this.registerForm.name))
+            return console.log('名字为2-20个字符！')
+          if (!/[a-zA-Z0-9]{6,20}/.test(this.registerForm.code))
+            return console.log('密码为6-20位英文或数字!')
+          this.disabled = true
+          userRegister({
+            name: this.registerForm.name || '',
+            password: this.registerForm.code || '',
+            phone: this.registerForm.mobile || '',
+            smsCode: this.registerForm.msm || ''
+          }).then((res) => {
+            // 跳转登录页面
+            if (Number(res.code != 1)) {
+              this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+              this.disabled = false
+            } else {
+              this.$message({
+                message: '注册成功',
+                type: 'success',
+                duration: 2000
+              })
+              setTimeout(() => {
+                this.$router.push('/login')
+                this.disabled = false
+              } ,2000)
+            }
+          }).catch((err) => {
+            this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+            this.disabled = false
+          })
+        });
+      }
+    },
+    beforeDestroy() {
+      // 销毁组件清除定时器
+      clearInterval(this.timer)
+      this.timer = null
+    }
+  }
+
+</script>
+
+<style scoped>
+  .register {
+    width: 450px;
+    height: 400px;
+    margin: 100px auto;
+    border: 1px solid #666;
+    border-radius: 5px;
+    padding: 20px;
+  }
+
+  .register h2 {
+    text-align: center;
+    color: #606266;
+  }
+
+  .register-button {
+    width: 100%;
+  }
+
+  .to-login {
+    font-size: 13px;
+  }
+
+  .to-login {
+    color: #409EFF;
+  }
+</style>

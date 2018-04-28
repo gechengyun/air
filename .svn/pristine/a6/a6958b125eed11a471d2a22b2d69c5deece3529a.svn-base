@@ -1,0 +1,192 @@
+<template>
+  <div class="addStation">
+      <el-form label-position="left" :model="dynamicValidateForm" :rules="rules" ref="dynamicValidateForm" label-width="100px" class="demo-ruleForm demo-form-inline" v-loading="loading">
+       <h1>基础信息</h1>
+       <hr>
+      <el-row>
+          <el-col :span="12">
+          <el-form-item label="空调站点名称" prop="name" label-width="110px">
+              <el-input v-model="dynamicValidateForm.name" placeholder="请输入中央空调名称（不超过20位字符）"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="归属项目" prop="projectId" class="ml10" label-width="80px">
+              <el-select v-model="dynamicValidateForm.projectId" placeholder="请选择归属项目">
+                 <el-option
+                  v-for="item in project"
+                  :key="item.id"
+                  :label="item.projectName"
+                  :value="item.id"
+                  ></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        
+        <el-col :span="24">
+          <el-form-item label="安装位置" prop="location">
+            <el-input v-model="dynamicValidateForm.location" placeholder="请输入安装位置"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>  
+       <h1>物联网采集网关及关联控制器信息</h1>
+       <hr> 
+       <el-row>
+          <el-col :span="6">
+              <el-form-item label="" label-width="15px">
+               采集设备名称
+             </el-form-item>
+            </el-col> 
+             <el-col :span="6">
+              <el-form-item label="" label-width="15px">
+              采集网关设备ID
+             </el-form-item>
+            </el-col>  
+            <el-col :span="5">
+              <el-form-item label="" label-width="15px">
+                关联控制器名称
+             </el-form-item>
+            </el-col> 
+            <el-col :span="5">
+              <el-form-item label="" label-width="15px">
+               安装位置
+             </el-form-item>
+          </el-col>   
+       </el-row>
+      
+          <el-form-item
+            v-for="(domain, index) in dynamicValidateForm.domains"
+            :key="domain.key"
+            :prop="'domains.' + index + '.value'"
+            :rules="{
+              required: true, message: '域名不能为空', trigger: 'blur'
+            }"
+            label-width="0px"
+          >
+            <el-input v-model="domain.value" style="width:23%"></el-input>
+            <el-input v-model="domain.value" style="width:23%"></el-input>
+            <el-input v-model="domain.value" style="width:23%"></el-input>
+            <el-input v-model="domain.value" style="width:23%"></el-input>
+             <el-button @click="addDomain">新增</el-button>
+            <!-- <el-button @click.prevent="removeDomain(domain)">删除</el-button> -->
+          </el-form-item>
+          <!-- <el-form-item>
+            <el-button type="primary" @click="submitForm('dynamicValidateForm')">提交</el-button>
+            <el-button @click="addDomain">新增域名</el-button>
+          </el-form-item> -->
+    
+      <el-form-item style="text-align:center">
+        <el-button type="primary" @click="submitForm('dynamicValidateForm')">保存</el-button>
+        <!-- <el-button @click="resetForm('ruleForm')">重置</el-button> -->
+         <el-button  @click="$router.push({path:'/points',query:{page:$route.query.page}})">关闭</el-button>
+      </el-form-item>
+</el-form>
+  </div>
+</template>
+
+<script>
+import {
+  getListByUser,
+  getUserProjects
+} from '../../config/api'
+export default {
+  name: 'addStation',
+  data () {
+    return {
+          row_id:1,
+          project:[],
+          dynamicValidateForm: {
+            projectId:'',
+            location:'',
+            name: '', 
+            domains: [{
+              value: ''
+            }],
+            email: ''
+         },
+         loading:false,
+        rules: {
+          name: [
+            { required: true, message: '请输入空调站点名称', trigger: 'blur' },
+             { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],       
+          projectId:[
+           { required: true, message: '请选择归属项目', trigger: 'change' }
+          ],
+          location:[
+           { required: true, message: '请输入安装位置', trigger: 'blur' }
+          ],
+         
+        },
+        // dynamicValidateForm: {
+        //   domains: [{
+        //     value: ''
+        //   }],
+        //   email: ''
+        // }
+
+      };
+  },
+   created () {
+     this.getSelectValue()
+  },
+  methods: {
+        getSelectValue(){
+          getUserProjects().then((resp)=>{
+          this.project=resp.data
+          })
+        },
+        submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+                consle.log("ok")
+      
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+       submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            alert('submit!');
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      },
+      removeDomain(item) {
+        var index = this.dynamicValidateForm.domains.indexOf(item)
+        if (index !== -1) {
+          this.dynamicValidateForm.domains.splice(index, 1)
+        }
+      },
+      addDomain() {
+        this.dynamicValidateForm.domains.push({
+          value: '',
+          key: Date.now()
+        });
+      }
+  },
+ 
+}
+</script>
+
+<style scoped>
+     .el-select{
+         width:100%
+     }
+     hr{
+      height:1px;border:none;border-top:1px solid #D9D9D9;
+     }
+     .el-form-item__content{
+       line-height:20px!important
+     }
+</style>
+

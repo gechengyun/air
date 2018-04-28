@@ -1,0 +1,19 @@
+<template>
+  <div class="infoInput"></div>
+</template>
+
+<script>
+export default {
+  name: 'infoInput',
+  data () {
+    return {
+
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

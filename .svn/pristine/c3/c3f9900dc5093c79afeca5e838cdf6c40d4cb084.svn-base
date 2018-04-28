@@ -1,0 +1,19 @@
+<template>
+  <div class="stationPic"></div>
+</template>
+
+<script>
+export default {
+  name: 'stationPic',
+  data () {
+    return {
+
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

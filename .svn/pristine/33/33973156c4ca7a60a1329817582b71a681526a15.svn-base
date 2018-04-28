@@ -1,0 +1,17 @@
+/**
+ * 公共方法
+ */
+
+//  上传图片限制
+export const isLegalImg = (vm, file, cb) => {
+  const isType = file.type === ('image/jpeg' || 'image/png' || 'image/jpg')
+  const isLtM = file.size / 1024 / 1024 < 2
+  if (!isType) {
+    vm.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+  }
+  if (!isLtM) {
+    vm.$message.error('上传头像图片大小不能超过 2MB!')
+  }
+  cb()
+  return isType && isLtM
+}

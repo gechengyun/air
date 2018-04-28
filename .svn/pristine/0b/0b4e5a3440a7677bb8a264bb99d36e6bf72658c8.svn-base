@@ -1,0 +1,346 @@
+<template>
+  <div class="dictionarieValue">
+    <el-row>
+      <el-col :span="24">{{typeName}}字典值管理</el-col>
+    </el-row>
+    <el-row class="mt20">
+      <el-col :span="12">
+        <el-input
+          v-model.trim="valueName"
+          placeholder="请输入字典值" />
+      </el-col>
+      <el-col :span="12">
+        <el-button
+          type="primary"
+          style="margin-left: 20px"
+          @click="getDataList()">搜索</el-button>
+        <el-button type="primary" @click="openMessage()">新增字典值</el-button>
+      </el-col>
+    </el-row>
+    <el-row class="mt20">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        style="width: 100%"
+        border>
+        <el-table-column
+          prop="index"
+          label="序号"
+          width="80"
+          fixed>
+          <template slot-scope="scope">{{scope.$index + 1}}</template>
+        </el-table-column>  
+        <el-table-column
+          prop="value"
+          label="字典值"
+          fixed />
+        <el-table-column
+          prop="ordinal"
+          label="排序"
+          width="100"
+          fixed />
+        <el-table-column 
+          prop="state" 
+          label="状态" 
+          width="100">
+          <template slot-scope="scope">
+            <el-tag :type="scope.row.state == 1 ? 'success' : 'danger'" close-transition>
+                {{scope.row.state == 1 ? '启用' : '禁用'}}
+            </el-tag>
+          </template>
+        </el-table-column> 
+        <el-table-column
+          label="操作"
+          width="200" 
+          fixed="right">
+          <template slot-scope="scope">
+            <el-button
+              type="text"
+              @click="changeEnabled(scope.row.state == 1 ? true : false, scope.row.id)"
+              size="small">{{scope.row.state == 1 ? '禁用' : '启用'}}</el-button>
+            <el-button
+              type="text"
+              size="small"
+              @click="openMessage(scope.row.id)"
+              v-show="scope.row.state == 1 ? true : false">编辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-row>
+    <el-row v-if="total > currentPageSize">
+      <el-col :span="24">
+        <el-pagination
+          background
+          style="text-align:center" class="mt20"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page.sync="currentPage"
+          :page-size="currentPageSize"
+          layout="prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </el-col>
+    </el-row>
+    <el-dialog
+      title="编辑字典值"
+      :append-to-body="true"
+      :visible.sync="dialogTableVisible"
+      :modal-append-to-body="false">
+      <el-form
+        :model="dictForm"
+        ref="dictForm"
+        :rules="rules"
+        label-width="100px">
+        <el-row type="flex" justify="center">
+          <el-col :span="24">
+            <el-form-item label="字典类型：">
+              <el-input
+                type="text"
+                placeholder="暂无分类"
+                :value="typeName"
+                disabled />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="center">
+          <el-col :span="24">
+            <el-form-item label="字典值：" prop="value">
+              <el-input
+                type="text"
+                placeholder="请输入字典值"
+                v-model.trim="dictForm.value" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="center">
+          <el-col :span="24">
+            <el-form-item label="排序：" prop="ordinal">
+              <el-input
+                maxLength="2"
+                type="number"
+                placeholder="请输入排序值（1-99整数）"
+                v-model.trim="dictForm.ordinal" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row style="text-align:center">
+          <el-col :span="24">
+            <el-form-item style="margin-left: -100px">
+              <el-button
+                type="primary"
+                @click="submitForm('dictForm')">提交</el-button>
+              <el-button @click="closeForm('dictForm')">关闭</el-button>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {
+  dictGetValuePageList,
+  dictEnableState,
+  dictDisableState,
+  dictddValue,
+  dictUpdateValue,
+  dictGetValueById,
+  dictGetTypeById
+} from '../../config/api'
+export default {
+  name: 'dictionarieValue',
+  data () {
+    return {
+      loading: true, // loading
+      list: [], // 列表
+      typeName: '', // 名称
+      typeId: this.$route.params.id || '', // typeId
+      currentPage: Number(this.$route.query.page) || 1, // 页码
+      currentPageSize: 10, // 每页数目
+      total: 0, // 总项目数
+      valueName: '', // search搜索的值
+      dialogTableVisible: false, // dialog显示
+      dictForm: {
+        id: 0, // id
+        value: '', // 字典值
+        ordinal: '', // 排序
+      }, // 弹窗表单
+      rules: {
+        value: [{ required: true, message: '请输入字典值', trigger: 'blur' }],
+        ordinal: [
+          { required: true, message: '请输入排序值', trigger: 'blur' },
+          { min: 1, max: 2, message: '请输入1-99整数', trigger: 'blur' }
+        ]
+      }, // 输入规则
+    }
+  },
+  methods: {
+    getDataList (page) {
+      // 获得数据列表
+      dictGetValuePageList(page ? 
+      {
+        pageIndex: page,
+        pageSize: this.currentPageSize,
+        typeId: this.typeId,
+        valueName: ''
+      } :
+      {
+        pageIndex: this.currentPage,
+        pageSize: this.currentPageSize,
+        typeId: this.typeId,
+        valueName: this.valueName
+      }).then((res) => {
+        if (Number(res.code) != 1) {
+          this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        } else {
+          this.list = res.data.list
+          this.total = res.data.total
+          this.currentPage = res.data.pageNum
+          this.currentPageSize = res.data.pageSize
+        }
+        this.loading = false
+      }).catch((err) => {
+        this.loading = false
+      })
+    },
+    getTypeById () {
+      // 获取类型名称
+      dictGetTypeById({id: this.$route.params.id || ''})
+        .then((res) => {
+          if (Number(res.code) != 1)
+            this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          this.typeName = res.data.typeName
+        }).catch((err) => {})
+    },
+    changeEnabled (type, id) {
+      // 修改状态弹窗提示
+      this.$confirm(`确定${type ? '禁用' : '启用'}该字典值？`)
+        .then(_ => {
+          this.isState(type, id)
+        }).catch(_ => {})
+    },
+    isState (type, id) {
+      // type: true 可禁用(当前启用) false 可启用(当前禁用)
+      type ?
+      dictEnableState({
+        id: id
+      }).then((res) => {
+        if (Number(res.code) != 1)
+          return this.$alert('禁用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        this.$message({
+          type: 'success',
+          message: '禁用成功',
+          duration: 1000
+        })
+        this.getDataList() // 刷新列表
+      }) :
+      dictDisableState({
+        id: id
+      }).then((res) => {
+        if (Number(res.code) != 1)
+          return this.$alert('启用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        this.$message({
+          type: 'success',
+          message: '启用成功',
+          duration: 1000
+        })
+        this.getDataList() // 刷新列表
+      })
+    },
+    handleSizeChange (val) {
+      this.currentPage = 1
+      this.currentPageSize = val
+      this.getDataList()
+    },
+    handleCurrentChange (val) {
+      this.currentPage = val
+      this.getDataList()
+    },
+    openMessage (id) {
+      Object.assign(this.dictForm, {id: 0, value: '', ordinal: ''}) // 数据污染问题
+      if (id) {
+        // 获取字典值信息
+        dictGetValueById({
+          id: id
+        }).then((res) => {
+          if (Number(res.code) != 1)
+            return this.$alert('禁用失败', '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          Object.assign(this.dictForm, {id: id, value: res.data.value, ordinal: res.data.ordinal})
+          this.dialogTableVisible = true
+        }).catch((err) => {})
+      } else {
+        // 新增字典值
+        this.dialogTableVisible = true
+      }
+    },
+    submitForm () {
+      // 提交表单
+      if (this.dictForm.id == 0) {
+        dictddValue({
+          id: this.dictForm.id,
+          ordinal: this.dictForm.ordinal,
+          typeId: this.typeId,
+          value: this.dictForm.value
+        }).then((res) => {
+          if (Number(res.code) != 1)
+            return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          this.$message({
+            message: '新增成功',
+            type: 'success',
+            duration: 2000
+          })
+          if (Math.ceil(this.dictForm.ordinal / this.currentPageSize) <= 1) {
+            this.getDataList(1)
+          } else if (Math.ceil(this.dictForm.ordinal / this.currentPageSize) > Math.ceil(this.total / this.currentPageSize)) {
+            this.getDataList(Math.ceil(this.total / this.currentPageSize))
+          } else {
+            this.getDataList(Math.ceil(this.dictForm.ordinal / this.currentPageSize))
+          }
+          this.dialogTableVisible = false
+          Object.assign(this.dictForm, {id: 0, value: '', ordinal: ''})
+        }).catch((err) => {
+          this.dialogTableVisible = false
+          Object.assign(this.dictForm, {id: 0, value: '', ordinal: ''})
+        }).catch((err) => {})
+      } else {
+        dictUpdateValue({
+          id: this.dictForm.id,
+          ordinal: this.dictForm.ordinal,
+          typeId: this.typeId,
+          value: this.dictForm.value
+        }).then((res) => {
+          if (Number(res.code) != 1)
+            return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          this.$message({
+            message: '修改成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.getDataList()
+          this.dialogTableVisible = false
+          Object.assign(this.dictForm, {id: 0, value: '', ordinal: ''})
+        }).catch((err) => {
+          this.dialogTableVisible = false
+          Object.assign(this.dictForm, {id: 0, value: '', ordinal: ''})
+        })
+      }
+    },
+    closeForm (formName) {
+      // 关闭弹窗
+      this.$refs[formName].resetFields() // 清理原数据
+      this.dialogTableVisible = false
+    }
+  },
+  created () {
+    console.log(this.$route.params.id, '$route.param.id')
+    this.getDataList()
+    this.getTypeById()
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

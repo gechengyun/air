@@ -1,0 +1,141 @@
+<template>
+ <div class='user'>
+    <el-row>
+     <el-col :span="5">
+        <el-tree
+        :data="data2"
+        node-key="id"
+        default-expand-all
+        highlight-current
+        ref="tree"
+        :expand-on-click-node="false"
+        @node-click="handleNodeClick"
+        :props="defaultProps">  
+        </el-tree>
+     </el-col>
+     <el-col :span="19" style="padding-left:20px">
+        <el-form :inline="true" :model="formInline" class="demo-form-inline">
+          <el-form-item label="用户姓名">
+              <el-input v-model="formInline.name"></el-input>
+          </el-form-item>
+          <el-form-item label="注册时间">
+              <el-date-picker
+              v-model="formInline.time"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期">
+              </el-date-picker>
+          </el-form-item>       
+          
+          <el-form-item>
+              <el-button type="primary">查询</el-button>
+               <el-button type="primary" plain>重置</el-button>
+          </el-form-item>
+       </el-form>
+            <el-table
+              :data="tableData"
+              style="width: 100%">
+              <el-table-column
+                prop="airStationName"
+                label="用户账号"
+              >
+              </el-table-column>
+              <el-table-column
+                prop="projectName"
+                label="用户姓名"
+                >
+              </el-table-column>
+              <el-table-column
+                prop="location"
+                label="用户电话">
+              </el-table-column>
+               <el-table-column
+                prop="location"
+                label="角色">
+              </el-table-column>
+               <el-table-column
+                prop="location"
+                label="注册时间">
+              </el-table-column>
+               <el-table-column
+                prop="location"
+                label="用户状态">
+              </el-table-column>
+              <el-table-column
+                label="操作"
+                width="100">
+                <template slot-scope="scope">
+                  <el-button type="text">下载</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+     </el-col>
+    </el-row>
+
+ </div>
+</template>
+<script>
+  export default {
+    data() {
+      return {
+         formInline: {
+          name:'',
+          time:''
+        },  
+        data2: [{
+          id: 1,
+          label: '一级 1',
+          children: [{
+            id: 4,
+            label: '二级 1-1',
+            children: [{
+              id: 9,
+              label: '三级 1-1-1'
+            }, {
+              id: 10,
+              label: '三级 1-1-2'
+            }]
+          }]
+        }, {
+          id: 2,
+          label: '一级 2',
+          children: [{
+            id: 5,
+            label: '二级 2-1'
+          }, {
+            id: 6,
+            label: '二级 2-2'
+          }]
+        }, {
+          id: 3,
+          label: '一级 3',
+          children: [{
+            id: 7,
+            label: '二级 3-1'
+          }, {
+            id: 8,
+            label: '二级 3-2'
+          }]
+        }],
+        defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+         tableData: [],      
+      };
+    },
+     mounted () {
+       this.setCurrentKey()
+     },
+     methods: {
+       setCurrentKey(){
+            this.$refs.tree.setCurrentKey(1);
+       },
+      handleNodeClick(data) {
+        console.log(data);
+      },
+    
+    }
+  };
+</script>

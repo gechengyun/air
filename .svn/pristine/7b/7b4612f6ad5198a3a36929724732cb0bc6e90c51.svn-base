@@ -1,0 +1,100 @@
+<template>
+ <div class='report'>
+    <el-form :inline="true" :model="formInline" class="demo-form-inline">
+        <el-form-item label="时间">
+            <el-date-picker
+            v-model="formInline.time"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>
+            <el-form-item label="项目类型">
+            <el-select v-model="formInline.airStationId" placeholder="站点">
+            <el-option label="全部" value=""></el-option>
+            </el-select>      
+        </el-form-item>
+        <el-form-item label="项目">
+            <el-select v-model="formInline.projectId" placeholder="项目">
+            <el-option label="全部" value=""></el-option>
+            <el-option
+            v-for="item in project"
+            :key="item.id"
+            :label="item.projectName"
+            :value="item.id"
+            ></el-option>
+            </el-select>  
+     </el-form-item>
+     <el-form-item label="站点">
+        <el-select v-model="formInline.airStationId" placeholder="站点">
+         <el-option label="全部" value=""></el-option>
+        </el-select>      
+    </el-form-item>
+    <el-form-item>
+        <el-button type="primary" @click="query()">查询</el-button>
+    </el-form-item>
+    </el-form>
+     <el-table
+    :data="tableData"
+    style="width: 100%">
+      <el-table-column
+      type="index"
+      label="序号"
+      width="50">
+    </el-table-column>
+    <el-table-column
+      prop="airStationName"
+      label="报表名称"
+    >
+    </el-table-column>
+    <el-table-column
+      prop="projectName"
+      label="报表类型"
+      >
+    </el-table-column>
+    <el-table-column
+      prop="location"
+      label="报表生成时间">
+    </el-table-column>
+    <el-table-column
+      label="操作"
+      width="100">
+      <template slot-scope="scope">
+        <el-button type="text">下载</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+ </div>
+</template>
+<script> 
+import {getUserProjects} from '../../config/api'
+ export default{
+     data(){
+       return{
+        project:[],
+        formInline: {
+          projectId:'',
+          airStationId:'',
+          observationType:'',
+          name:'',
+          time:''
+        },  
+        tableData: [],      
+       }
+     },
+    created () {     
+      this.getSelectValue();
+    },
+     methods:{
+        getSelectValue(){
+                getUserProjects().then((resp)=>{
+                    this.project=resp.data
+                })
+        },
+         layerview(){
+             layer.alert('内容')
+         }
+     }
+ }
+</script>

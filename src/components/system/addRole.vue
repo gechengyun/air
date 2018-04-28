@@ -1,0 +1,196 @@
+<template>
+  <div class="addRole">
+    <el-row>
+      <el-col :span="24">
+        <el-form
+          v-loading="loading"
+          :model="addForm"
+          :rules="rules"
+          ref="addForm"
+          label-width="100px">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="角色名称：" prop="name">
+                <el-input
+                  type="text"
+                  maxLength="20"
+                  placeholder="请输入角色名称，不超过20位字符"
+                  v-model.trim="addForm.name" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="角色说明：" prop="remark">
+                <el-input
+                  type="text"
+                  maxLength="20"
+                  placeholder="请输入角色说明，不超过20位字符"
+                  v-model.trim="addForm.remark" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <el-form-item label="角色授权：">
+                <el-tree
+                  :data="treeList"
+                  show-checkbox
+                  node-key="id"
+                  ref="tree"
+                  v-loading="treeLoading"
+                  :default-expand-all="true"
+                  :default-checked-keys="checkList"
+                  :props="defaultProps">
+                </el-tree>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:center">
+            <el-col :span="24">
+              <el-button
+                type="primary"
+                @click="submitForm('addForm')"
+                :disabled='disabled'>提交</el-button>
+              <el-button @click="$router.push({path: '/role', query: {page: $route.query.page}})">关闭</el-button>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {
+  resourceGetAllResource,
+  roleAdd,
+  roleGetById,
+  roleUpdate
+} from '../../config/api'
+export default {
+  name: 'addRole',
+  data () {
+    return {
+      loading: true, // loading
+      disabled: false, // 防止二次点击
+      addForm: {
+        id: this.$route.params.id || 0, // id
+        name: '', // 角色名称
+        remark: '', // 角色说明
+      },
+      treeList: [], // 树状列表
+      defaultProps: {
+        children: 'children',
+        label: 'name'
+      },
+      checkList: [], // 默认勾选列表
+      treeLoading: true, // 树状列表loading
+      rules: {
+        name: [{required: true, message: '请输入角色名称', trigger: 'blur'}],
+        remark: [{required: true, message: '请输入角色说明', trigger: 'blur'}],
+      }
+    }
+  },
+  methods: {
+    getAllResource () {
+      // 获取树状列表
+      resourceGetAllResource({})
+        .then(res => {
+          if (Number(res.code) != 1) {
+            this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+          } else {
+            res.data.forEach(item => {
+              res.data.forEach(dic => {
+                if (item.id == dic.pid) {
+                  item.children.push(dic)
+                }
+              })
+            })
+            // 选出大分类 1：WEB 2：APP 3：微信 
+            let pcList = res.data.filter(item => { return item.client == 1 && item.pid == 0})
+            let appList = res.data.filter(item =>{ return item.client == 2 && item.pid == 0})
+            let weiList = res.data.filter(item =>{ return item.client == 3 && item.pid == 0})
+            if (pcList.length > 0)
+              this.treeList = this.treeList.concat([{id: 'pc', name: 'pc', children: pcList}])
+            if (appList.length > 0)
+              this.treeList = this.treeList.concat([{id: 'app', name: 'app', children: appList}])
+            if (weiList.length > 0)
+              this.treeList = this.treeList.concat([{id: 'wei', name: '微信', children: weiList}])
+          }
+          this.treeLoading = false
+        }).catch(err =>{ this.treeLoading = false })
+    },
+    submitForm (formName) {
+      // 保存资料
+      this.$refs[formName].validate((valid) => {
+        if (!this.addForm.name || !this.addForm.remark)
+          return console.log('表单不完整')
+        // 提交表单
+        this.disabled = true
+        let resourceIdList = this.$refs.tree.getCheckedKeys().filter(item => {
+          return item != 'app' || item != 'pc' || 'wei'
+        })
+        if (this.$route.params.id == 0) {
+          roleAdd(Object.assign(this.addForm, {resourceIdList}))
+            .then(res => {
+              if (Number(res.code) != 1) {
+                this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+              } else {
+                this.$message({
+                  type: 'success',
+                  message: '新增角色成功',
+                  duration: 2000
+                })
+                setTimeout(() => {
+                  this.disabled = false
+                  this.$router.push({path: '/role', query: {page: this.$route.query.page}})
+                }, 2000)
+              }
+            })
+          .catch(err => { this.disabled = false })
+        } else {
+          roleUpdate(Object.assign(this.addForm, {resourceIdList}))
+            .then(res => {
+              if (Number(res.code) != 1) {
+                this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+              } else {
+                this.$message({
+                  type: 'success',
+                  message: '修改角色成功',
+                  duration: 2000
+                })
+                setTimeout(() => {
+                  this.disabled = false
+                  this.$router.push({path: '/role', query: {page: this.$route.query.page}})
+                }, 2000)
+              }
+            })
+          .catch(err => { this.disabled = false })
+        }
+      })
+    },
+    getById () {
+      roleGetById({
+        id: this.$route.params.id
+      }).then(res => {
+        if (Number(res.code) != 1) {
+          this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        } else {
+          this.checkList = [2] || res.data.resourceIdList
+          this.addForm.name = res.data.name
+          this.addForm.remark = res.data.remark
+          this.addForm.id = res.data.id || this.$route.params.id || 0
+        }
+        this.loading = false
+      }).catch(err => this.loading = false)
+    }
+  },
+  created () {
+    this.$route.params.id ? this.getById() : this.loading = false // 获取角色信息
+    this.getAllResource() // 获取树状列表
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

@@ -1,0 +1,153 @@
+<template>
+  <div class='station'>
+ 
+     
+        <el-form :inline="true" class="demo-form-inline">         
+        <el-form-item>
+           <el-input v-model="stationInput" placeholder="请输入空调站点名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button
+            type="primary"
+            @click="query()"
+            style="margin-left: 10px"
+            :disabled="disabled">搜索</el-button>
+          <el-button @click="closeTable()" :disabled="disabled" plain>重置</el-button>
+          <el-button type="primary" @click="$router.push({path: '/station/addStation/0'})">新增空调站点</el-button>
+        </el-form-item>
+      </el-form>     
+        <el-table
+          v-loading="loading"
+          :data="list"
+          style="width: 100%"
+          border>
+          <el-table-column
+            label="序号"
+            width="80"
+            fixed>
+            <template slot-scope="scope">{{scope.$index + 1}}</template>
+          </el-table-column>
+          <el-table-column
+            prop="name"
+            label="站点名称"
+            width="250" />
+          <el-table-column
+            prop="projectName"
+            label="归属项目"
+            width="250" />
+          <el-table-column
+            prop="projectAddress"
+            label="地址" />
+          <el-table-column 
+            label="操作"
+            width="300"
+            fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/station/addStation/' + scope.row.id,
+                  query: {page: currentPage}
+                })">编辑</el-button>
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/station/stationPic/' + scope.row.id,
+                  query: {page: currentPage}
+                })">工艺模型配置</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+          v-show="pageShow"
+          background
+          style="text-align:center" class="mt20"
+          @current-change="handleCurrentChange"
+          :current-page.sync="currentPage"
+          :page-size="currentPageSize"
+          layout="prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+  </div>
+</template>
+
+<script>
+import {
+  stationGetPageList
+} from '../../config/api'
+export default {
+  name: 'station',
+  data () {
+    return {
+      disabled: false, // 防止二次点击
+      loading: true, // loading
+      stationInput: '', // 搜索站点
+      list: [], // 列表
+       // 分页
+      pageShow:false,
+      currentPage: Number(this.$route.query.page) || 1, // 页码
+      currentPageSize: 10, // 每页数目
+      total: 0, // 总项目数
+      
+    }
+  },
+  methods: {
+  //查询
+    query(){
+      this.loading=true;
+        this.currentPage = 1;
+      this.getDataList()
+    },
+    getDataList () {
+      // 获得表单
+      this.disabled = true
+      stationGetPageList({
+        name: this.stationInput || '',
+        pageIndex:this.currentPage,
+        pageSize: this.currentPageSize
+      }).then(res => {
+        console.log(res)
+        if (Number(res.code) != 1) {
+          this.loading = false
+          return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        }
+         
+        if(this.total>10){
+          this.pageShow=true
+        }else{
+            this.pageShow=false
+        }
+        this.loading = false
+        this.disabled = false
+        this.list = res.data.list
+        this.total = res.data.total
+        this.currentPage = res.data.pageNum
+        this.currentPageSize = res.data.pageSize
+      }).catch(err => {
+        this.loading = false
+        this.disabled = false
+      })
+    },
+    closeTable () {
+      // 重置搜索条件
+      this.stationInput = ''
+      this.getDataList()
+    },
+    handleCurrentChange (val) {
+      this.loading=true     
+      this.currentPage = val
+      this.getDataList()
+    }
+  },
+  created () {
+    this.getDataList()
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

@@ -1,0 +1,114 @@
+<template>
+  <div class="dictionarie">
+    <el-row>
+      <el-col :span="24">
+        <el-table
+          v-loading="loading"
+          :data="list"
+          style="width: 100%"
+          border>
+          <el-table-column
+            prop="index"
+            label="序号"
+            width="80"
+            fixed>
+            <template slot-scope="scope">{{scope.$index + 1}}</template>
+          </el-table-column>
+          <el-table-column
+            prop="typeName"
+            label="字典类型名称"
+            width="300"
+            fixed />
+          <el-table-column
+            prop="vValues"
+            label="字典值"
+            fixed />
+          <el-table-column 
+            label="操作"
+            width="150"
+            fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: 'dictionarie/dictionarieValue/' + scope.row.id,
+                  query: {page: currentPage}
+                })">编辑字典值</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+    <el-row v-if="total > currentPageSize">
+      <el-col :span="24">
+        <el-pagination
+          background
+          style="text-align:center" class="mt20"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page.sync="currentPage"
+          :page-size="currentPageSize"
+          layout="prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {
+  dictGetTypePageList
+} from '../../config/api'
+export default {
+  name: 'dictionarie',
+  data () {
+    return {
+      loading: true, // loading
+      list: [], // 列表
+      currentPage: Number(this.$route.query.page) || 1, // 页码
+      currentPageSize: 10, // 每页数目
+      total: 0, // 总项目数
+    }
+  },
+  methods: {
+    getDataList () {
+      // 获取列表信息
+      dictGetTypePageList({
+        pageIndex: this.currentPage,
+        pageSize: this.currentPageSize
+      }).then((res) => {
+        if (Number(res.code) != 1)
+          return this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        this.loading = false
+        this.list = res.data.list
+        this.total = res.data.total
+        this.currentPage = res.data.pageNum
+        this.currentPageSize = res.data.pageSize
+      }).catch((err) => {
+        this.loading = false
+      })
+    },
+    handleSizeChange (val) {
+      this.currentPage = 1
+      this.currentPageSize = val
+      this.getDataList()
+    },
+    handleCurrentChange (val) {
+      this.currentPage = val
+      this.getDataList()
+    }
+  },
+  created () {
+    // 获取列表数据
+    this.getDataList()
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+
+

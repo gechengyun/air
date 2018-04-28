@@ -1,0 +1,274 @@
+<template>
+ <div class='addequipment'>
+     <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm demo-form-inline"  v-loading="loading">
+ 
+      <el-row>
+          <el-col :span="12">
+          <el-form-item label="归属项目" prop="projectId">
+              <el-select v-model="ruleForm.projectId" placeholder="请选择归属项目">
+                 <el-option
+                  v-for="item in project"
+                  :key="item.id"
+                  :label="item.projectName"
+                  :value="item.id"
+                  ></el-option>
+
+              </el-select>
+            </el-form-item>
+        </el-col>
+          <el-col :span="12">
+          <el-form-item label="归属空调站点" prop="airStationId" label-width="130px">
+              <el-select v-model="ruleForm.airStationId" placeholder="请选择归属空调站点">
+                 <el-option
+                  v-for="item in stations"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                  ></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="设备名称" prop="name">
+            <el-input v-model="ruleForm.name" placeholder="请输入设备名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="设备编码" prop="code" label-width="130px">
+            <el-input v-model="ruleForm.code" placeholder="不超过20位字符"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>   
+      <el-row>
+        <el-col :span="12">
+            <el-form-item label="设备类型" prop="equipmentType">
+                <el-select v-model="ruleForm.equipmentType">
+                  <el-option
+                  v-for="item in type"
+                  :key="item.id"
+                  :label="item.value"
+                  :value="item.id"
+                  ></el-option>
+                </el-select>
+            </el-form-item>         
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="工艺模型展示" prop="moduleShow" label-width="130px">
+            <el-select v-model="ruleForm.moduleShow">
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+   
+      <el-form-item label="安装位置" prop="location">
+          <el-input v-model="ruleForm.location" placeholder="不超过30位字符"></el-input>
+      </el-form-item>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="生成厂家">
+              <el-form-item prop="manufacturer">
+                <el-input v-model="ruleForm.manufacturer" placeholder="不超过20位字符"></el-input>
+              </el-form-item>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="安装日期" required>
+              <el-form-item prop="installDate">
+                <el-date-picker format="yyyy-MM-dd" value-format="yyyy-MM-dd" type="date" placeholder="选择日期" v-model="ruleForm.installDate" style="width: 100%;"></el-date-picker>
+              </el-form-item>
+          </el-form-item>
+        </el-col>
+      </el-row>  
+       <el-row>
+        <el-col :span="12">
+          <el-form-item label="品牌">
+              <el-form-item prop="brand">
+                <el-input v-model="ruleForm.brand" placeholder="不超过10位字符"></el-input>
+              </el-form-item>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label=型号>
+              <el-form-item prop="model">
+                <el-input v-model="ruleForm.model" placeholder="不超过20位字符"></el-input>
+              </el-form-item>
+          </el-form-item>
+        </el-col>
+      </el-row>  
+      <el-form-item style="text-align:center">
+        <el-button type="primary"  :disabled='disabled'  @click="submitForm('ruleForm')">保存</el-button>
+        <el-button @click="$router.push({path:'/equipment',query:{page:$route.query.page}})">关闭</el-button>
+      </el-form-item>
+</el-form>
+ </div>
+</template>
+<script>
+import {equipmentGetOne,getUserProjects,getEquipmentDict,equipmentAdd,equipmentUpdate,stationGetListByUser} from '../../config/api'
+  export default {
+    data() {
+      return {
+        project:[],
+        type:[],
+        stations:[],
+        loading:true,
+        disabled:false,
+        ruleForm: {
+          projectId:'',
+          airStationId:'',
+          name:'',
+          code:'',
+          equipmentType:'',
+          moduleShow:"1",
+          location:'',
+          manufacturer:'',
+          installDate:'',
+          brand:'',
+          model:'',
+        },
+        rules: {
+          projectId:[
+           { required: true, message: '请选择归属项目', trigger: 'change' }
+          ],
+          airStationId:[
+           { required: true, message: '请选择空调站点', trigger: 'change' }
+          ],
+          name: [
+            { required: true, message: '请输入设备名称', trigger: 'blur' },
+          ],
+          code: [
+            { required: true, message: '请输入设备编码', trigger: 'blur' },
+            { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          equipmentType:[
+           { required: true, message: '请选择设备类型', trigger: 'change' }
+          ],
+          location: [
+            { required: true, message: '请输入安装位置', trigger: 'blur' },
+            { max: 30, message: '长度不能超过30个字符', trigger: 'blur' }
+          ],
+          manufacturer:[
+             { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          installDate: [
+             {required: true, message: '请选择日期', trigger: 'change' }
+           ],
+          brand:[
+             { max: 10, message: '长度不能超过10个字符', trigger: 'blur' }
+          ],
+          model:[
+             { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+        }
+      };
+    },
+    created(){
+      //获取下拉框的值
+      this.getSelectValue();
+      if(this.$route.params.id!=undefined){
+        this.views()
+      }else{
+         this.loading=false;
+      }
+    },
+    methods: {
+      getSelectValue(){
+        getUserProjects().then((resp)=>{
+         this.project=resp.data
+       }),
+       getEquipmentDict().then((resp)=>{
+          this.type=resp.data
+       }),
+        stationGetListByUser().then((resp)=>{
+          this.stations=resp.data
+       })
+      },
+      views(){
+         equipmentGetOne({
+           id:this.$route.params.id
+         }).then((resp)=>{     
+           this.ruleForm={
+          projectId:resp.data.projectId,
+          airStationId:resp.data.airStationId,
+          name: resp.data.name,
+          code: resp.data.code,
+          equipmentType:resp.data.equipmentType,
+          moduleShow:String(resp.data.moduleShow),
+          location:resp.data.location,
+          manufacturer:resp.data.manufacturer,
+          installDate:resp.data.installDate,
+          brand:resp.data.brand,
+          model:resp.data.model,
+          };
+          
+          this.$nextTick().then(() => {
+            setTimeout(() => {
+              this.loading=false;
+            }, 100);
+          })
+          })    
+      },
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.loading=true
+            if(this.$route.params.id!=undefined){           
+              Object.assign(this.ruleForm,{id:parseInt(this.$route.params.id)})
+              equipmentUpdate(this.ruleForm).then((resp)=>{
+                  setTimeout(()=>{
+                      this.loading=false
+                   },1000) 
+                if(resp.code==1){
+                    this.$message({
+                       message: '修改成功',
+                       type: 'success',
+                       duration:500
+                        });
+                       setTimeout(()=>{
+                         this.$router.push({path:'/equipment'}) 
+                   },500) 
+                }else{
+                    this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+
+            }else{
+               equipmentAdd(this.ruleForm).then((resp)=>{
+                  setTimeout(()=>{
+                      this.loading=false
+                   },500) 
+                if(resp.code==1){
+                    this.$message({
+                       message: '新增成功',
+                       type: 'success',
+                       duration:500
+                        });
+                       setTimeout(()=>{
+                         this.$router.push({path:'/equipment'}) 
+                   },500) 
+                }else{
+                    this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+          }
+          
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      }
+    }
+  }
+</script>
+<style scoped>
+     .el-select{
+         width:100%
+     }
+</style>

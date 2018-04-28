@@ -1,0 +1,118 @@
+<template>
+ <div class='addpoints'>
+     <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm demo-form-inline" >
+ 
+      <el-row>
+          <el-col :span="12">
+          <el-form-item label="归属项目" prop="project">
+              <el-select v-model="ruleForm.project" placeholder="请选择归属项目">
+                <el-option label="区域一" value="shanghai"></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+          <el-col :span="12">
+          <el-form-item label="归属空调站点" prop="station" label-width="130px">
+              <el-select v-model="ruleForm.station" placeholder="请选择归属空调站点">
+                <el-option label="区域一" value="shanghai"></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        
+        <el-col :span="12">
+          <el-form-item label="测点编码" prop="coding">
+            <el-input v-model="ruleForm.coding" placeholder="请输入测点ID（不超过20位字符）"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="测点名称" prop="name"  label-width="130px">
+            <el-input v-model="ruleForm.name" placeholder="请输入测点名称（不超过20位字符）"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>   
+      <el-row>
+       <el-col :span="12">
+          <el-form-item label="归属设备">
+            <el-select v-model="ruleForm.equipment" placeholder="请选择归属设备">
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="测点类型" prop="view" label-width="130px">
+            <el-select v-model="ruleForm.type" placeholder="请选择测点类型">
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+   
+    
+     
+      <el-form-item style="text-align:center">
+        <el-button type="primary" @click="submitForm('ruleForm')">保存</el-button>
+        <!-- <el-button @click="resetForm('ruleForm')">重置</el-button> -->
+         <el-button onClick="javascript :history.back(-1);">关闭</el-button>
+      </el-form-item>
+</el-form>
+ </div>
+</template>
+<script>
+  export default {
+    data() {
+      return {
+        ruleForm: {
+          project:'',
+          station:'',
+          name: '',
+          coding: '',
+          type:'',
+          equipment:'',        
+        },
+        rules: {
+          project:[
+           { required: true, message: '请选择归属项目', trigger: 'change' }
+          ],
+          station:[
+           { required: true, message: '请选择空调站点', trigger: 'change' }
+          ],
+          name: [
+            { required: true, message: '请输入测点名称', trigger: 'blur' },
+             { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          coding: [
+            { required: true, message: '请输入测点编码', trigger: 'blur' },
+            { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          type:[
+           { required: true, message: '请选择测点类型', trigger: 'change' }
+          ],
+                  
+        }
+      };
+    },
+    methods: {
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            alert('submit!');
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      }
+    }
+  }
+</script>
+<style scoped>
+     .el-select{
+         width:100%
+     }
+</style>

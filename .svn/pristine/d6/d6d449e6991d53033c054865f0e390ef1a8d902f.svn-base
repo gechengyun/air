@@ -1,0 +1,213 @@
+<template>
+  <div class='project'>
+    <el-row>
+      <el-col :span="24">
+        <el-form :inline="true" :model="form">
+          <el-form-item label="状态：">
+            <el-col :span="9">
+              <el-select v-model="form.value" placeholder="全部">
+                <el-option
+                  v-for="item in list"
+                  :key="item.status"
+                  :label="item.value"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </el-col>
+            <el-col :span="14" :offset="1">
+              <el-input v-model.trim="form.name" placeholder="请输入项目名称"></el-input>
+            </el-col>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="search" :disabled="disabled">搜索</el-button>
+            <el-button type="primary" @click="reset" :disabled="disabled" plain>重置</el-button>
+            <el-button type="primary"
+              @click="$router.push({
+                path: '/changeProject',
+                query: {page: currentPage}
+              })">新增项目</el-button>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
+        <el-table
+          v-loading="loading"
+          :data="tableData"
+          style="width: 100%"
+          border>
+          <el-table-column
+            prop="index"
+            label="序号"
+            width="80"
+            fixed />
+          <el-table-column 
+            prop="projectName"
+            label="项目名称" />
+          <el-table-column
+            prop="ownerName"
+            label="归属业务单位" />
+          <el-table-column 
+            prop="user" 
+            label="单位项目负责人/联系电话" 
+            width="200" />
+          <el-table-column 
+            prop="time" 
+            label="维保起止日期" 
+            width="200" />
+          <el-table-column 
+            prop="status" 
+            label="状态" 
+            width="100">
+            <template slot-scope="scope">
+              <el-tag :type="statusValue(scope.row.status).type"
+                close-transition>{{statusValue(scope.row.status).value}}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作" 
+            width="200" 
+            fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/changeProject',
+                  query: {id: scope.row.id, page: currentPage}
+                })">项目信息</el-button>
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/changeProject',
+                  query: {id: scope.row.id, page: currentPage}
+                })">编辑</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
+        <el-pagination
+          background
+          style="text-align:center" class="mt20"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page.sync="currentPage"
+          :page-size="currentPageSize"
+          layout="prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {
+  projectGetPageList
+} from '../../config/api'
+export default {
+  name: 'project',
+  data () {
+    return {
+      form: {
+        value: '全部',
+        status: 0, // 选择状态 0-全部, 1-未开始, 2-进行中, 3-已过期
+        name: '' // 项目名称
+      },
+      list: [
+        // 状态栏
+        {status: 0, value: '全部'},
+        {status: 1, value: '未开始'},
+        {status: 2, value: '进行中'},
+        {status: 3, value: '已过期'}
+      ],
+      currentPage: Number(this.$route.query.page) || 1, // 页码
+      currentPageSize: 10, // 每页数目
+      total: 0, // 总项目数
+      tableData: [], // 返回表单数据
+      loading: true, // loading
+      disabled: true // disabled
+    }
+  },
+  methods: {
+    search () {
+      this.getDataList()
+    },
+    reset () {
+      // 重置
+      this.form = {
+        status: 0,
+        value: '全部',
+        name: ''
+      }
+      this.getDataList()
+    },
+    getDataList () {
+      // 搜索项目
+      this.loading = true
+      projectGetPageList({
+        status: this.form.status || 0,
+        projectName: this.form.name || '',
+        pageSize: this.currentPageSize || 10,
+        pageIndex: this.currentPage || 1
+      }).then((res) => {
+        if (Number(res.code) == 1) {
+          // 获取数据
+          this.tableData = Array.isArray(res.data.list)&&res.data.list.length > 0 ? 
+            res.data.list.map((item, index) => {
+                return Object.assign(item, {
+                  time: `${item.startTime} - ${item.endTime}`,
+                  user: `${item.chargeMen}/${item.phone}`,
+                  index: index + 1
+                })
+            }) : []
+          this.total = res.data.total
+          this.currentPage = res.data.pageNum
+          this.currentPageSize = res.data.pageSize
+        } else {
+          this.$alert(res.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {})
+        }
+        this.loading = false
+        this.disabled = false
+      }).catch((err) => {
+        this.loading = false
+        this.disabled = false
+      })
+    },
+    handleSizeChange (val) {
+      this.currentPage = 1
+      this.currentPageSize = val
+      this.getDataList()
+    },
+    handleCurrentChange (val) {
+      this.currentPage = val
+      this.getDataList()
+    },
+    statusValue (status) {
+      // 过滤状态
+      switch (status) {
+        case 1:
+          return {value: '未开始', type: 'warning'}
+        case 2:
+          return {value: '进行中', type: 'success'}
+        case 3:
+          return {value: '已过期', type: 'danger'}
+        default:
+          return {value: '', type: ''}     
+      }
+    }
+  },
+  created () {
+    this.getDataList()
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

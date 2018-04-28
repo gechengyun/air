@@ -1,0 +1,230 @@
+//接口设置
+import axios from '@/config/https';
+
+/* 登录注册 */
+export const userRegister = (data = {}) => axios.post('/user/register', data); // 注册接口
+export const userForget = (data = {}) => axios.post('/user/retrievePwd', data); // 注册接口
+export const getMSM = (data = {}) => axios.post('', data); // 获取短信接口
+
+/* 地址联动 */
+export const areaGetPaths = (data = {}) => axios.post('/area/getPaths', data);
+export const areaGetSons = (data = {}) => axios.post('/area/getSons', data);
+
+/* 项目管理 */
+export const projectGetPageList = (data = {}) => axios.post('/project/getPageList', data); // 查询项目列表
+export const projectGetById = (data = {}) => axios.post('/project/getById', data); // 根据ID获取项目信息
+export const projectAdd = (data = {}) => axios.post('/project/add', data); // 新增项目
+export const projectUpdate = (data = {}) => axios.post('/project/update', data); // 修改项目
+export const projectGetUserAndNoUserPro = (data = {}) => axios.post('/project/getUserAndNoUserProjects', data); // 根据获取用户分配项目
+
+/* 字典管理 */
+export const dictGetTypePageList = (data = {}) => axios.post('/dict/getTypePageList', data); // 获取字典列表
+export const dictGetTypeById = (data = {}) => axios.post('/dict/getTypeById', data); // 获取字典类型
+export const dictGetValuePageList = (data = {}) => axios.post('/dict/getValuePageList', data); // 获取字典值列表
+export const dictDisableState = (data = {}) => axios.post('/dict/disableState', data); // 禁用字典值
+export const dictEnableState = (data = {}) => axios.post('/dict/enableState', data); // 启用字典值
+export const dictddValue = (data = {}) => axios.post('/dict/addValue', data); // 新增字典值
+export const dictUpdateValue = (data = {}) => axios.post('/dict/updateValue', data); // 编辑字典值
+export const dictGetValueById = (data = {}) => axios.post('/dict/getValueById', data); // 通过获取字典值信息
+
+/* 客户管理 */
+export const customerGetById = (data = {}) => axios.post('/customer/getById', data); // 通过企业资料信息
+export const customerUpdate = (data = {}) => axios.post('/customer/update', data); // 通过获取字典值信息
+export const customerAuth = (data = {}) => axios.post('/customer/auth', data); // 提交资质认证
+export const customerGetExamineStateByUser = (data = {}) => axios.post('/customer/getExamineStateByUser', data); // 资质审核状态
+export const customerCheckPageList = (data = {}) => axios.post('/customer/getPageList', data); // 客户资质审核列表
+export const customerAgree = (data = {}) => axios.post('/customer/agree', data); // 同意审核
+export const customerRefuse = (data = {}) => axios.post('/customer/refuse', data); // 拒绝审核
+export const customerGetAllList = (data = {}) => axios.post('/customer/getAllList', data); // 拒绝审核
+export const customerGetCustomerPageList = (data = {}) => axios.post('/customer/getCustomerPageList', data); // 获取客户管理列表
+
+/* 角色管理 */
+export const roleGetPageList = (data = {}) => axios.post('/role/getPageList', data); // 获取角色列表
+export const roleDelete = (data = {}) => axios.post('/role/delete', data); // 获取角色列表
+export const roleAdd = (data = {}) => axios.post('/role/add', data); // 新增角色
+export const roleUpdate = (data = {}) => axios.post('/role/update', data); // 修改角色
+export const roleGetById = (data = {}) => axios.post('/role/getById', data); // 获取角色信息
+
+/* 资源管理 */
+export const resourceGetAllResource = (data = {}) => axios.post('/resource/getAllResource', data); // 获取树状列表资源
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 站点管理 */
+export const stationGetPageList = (data = {}) => axios.post('/airStation/getPageList', data); // 站点列表
+export const stationGetListByUser = (data = {}) => axios.post('/airStation/getListByUser', data); // 根据用户获取对应的站点信息
+export const stationAdd = (data = {}) => axios.post('/airStation/add', data); // 新增站点
+export const stationUpdate = (data = {}) => axios.post('/airStation/update', data); // 修改站点
+export const getstation = (data = {}) => axios.post('/airStation/getById', data); // 查看单个站点信息
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//设备管理
+export const equipmentlist = (data = {}) => axios.post('equipment/getPageList', data);
+export const getUserProjects = (data = {}) => axios.post('project/getUserProjects', data); //归属项目下拉列表
+export const getEquipmentDict = (data = {}) => axios.post('dict/getEquipmentDict', data); //设备类型下拉列表
+//export const equipmentdelete = (data = {}) => axios.post('equipment/delete', data); //删除设备
+export const equipmentdisable = (data = {}) => axios.post('equipment/disableState', data); //设备禁用
+export const equipmentenable = (data = {}) => axios.post('equipment/enableState', data); //设备启用
+export const equipmentGetOne = (data = {}) => axios.post('equipment/getById', data); //查看单个设备详情
+export const equipmentAdd = (data = {}) => axios.post('equipment/add', data); //新增设备
+export const equipmentUpdate = (data = {}) => axios.post('equipment/update', data); //修改设备
+
+//测点管理
+export const getObservationLocationDict = (data = {}) => axios.post('/dict/getObservationLocationDict', data); //测点类型下拉
+export const pointslist = (data = {}) => axios.post('observationLocation/getPageList', data); //列表内容
+export const pointsdisable = (data = {}) => axios.post('observationLocation/disableState', data); //测点禁用
+export const pointsenable = (data = {}) => axios.post('observationLocation/enableState', data); //测点启用
+export const pointsGetOne = (data = {}) => axios.post('observationLocation/getById', data); //查看单个测点详情
+export const pointsAdd = (data = {}) => axios.post('observationLocation/add', data); //新增测点
+export const pointsUpdate = (data = {}) => axios.post('observationLocation/update', data); //修改测点
+export const equipmentlistselect = (data = {}) => axios.post('equipment/getList', data); //归属设备下拉框

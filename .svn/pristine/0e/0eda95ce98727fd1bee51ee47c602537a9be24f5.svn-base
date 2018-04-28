@@ -1,0 +1,240 @@
+<template>
+ <div class='check'>
+    <el-form :inline="true" :model="formInline" class="demo-form-inline">
+        <el-form-item label="客户名称">
+            <el-input v-model="formInline.name"></el-input>
+        </el-form-item>
+        <el-form-item label="注册时间">
+            <el-date-picker
+            format="yyyy-MM-dd" value-format="yyyy-MM-dd"
+            v-model="formInline.time"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期">
+            </el-date-picker>
+        </el-form-item>       
+        <el-form-item label="处理状态">
+            <el-select v-model="formInline.state">               
+                <el-option label="全部" value=""></el-option>
+                <el-option label="未处理" value="0"></el-option>
+                <el-option label="已批准" value="1"></el-option>
+                <el-option label="已拒绝" value="2"></el-option>              
+            </el-select>      
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="query()">查询</el-button>
+            <el-button type="primary" @click="reset()" plain>重置</el-button>
+        </el-form-item>
+    </el-form>
+    <el-table
+    :data="tableData"
+    v-loading="loading" 
+    style="width: 100%">
+        <el-table-column
+        prop="applyTime"
+        label="申请时间"
+        >
+        </el-table-column>
+        <el-table-column
+        prop="name"
+        label="客户名称"
+        >
+        </el-table-column>
+        <el-table-column
+        prop="linkmanPhone"
+        label="用户电话">
+        </el-table-column>
+         <el-table-column
+        prop="areaPathName"
+        label="所属区域">
+        </el-table-column>
+         <el-table-column
+        prop="location"
+        label="认证图片"
+         width="80"
+        >
+        <template slot-scope="scope">
+            <el-button type="text" size="small" @click="open(scope.row.licensePic)">预览</el-button>
+        </template>
+        </el-table-column>
+        <el-table-column
+        label="处理状态" 
+         width="100"   
+        >
+        <template slot-scope="scope">
+        <el-tag
+            :type="state(scope.row.state).type"
+            close-transition>{{state(scope.row.state).value}}</el-tag>
+        </template>
+        </el-table-column>
+        <el-table-column
+        prop="examineTime"
+        label="处理时间"
+         width="180"
+        >
+        </el-table-column>
+        <el-table-column
+        label="操作"
+        width="100">
+        <template slot-scope="scope">
+             <el-button type="text" size="small"  v-show="scope.row.state === 0 ||scope.row.state === null ? true:false" @click='check(1,scope.row.id)'>同意</el-button>
+            <el-button type="text" size="small"  v-show="scope.row.state === 0 ||scope.row.state === null? true:false"  @click='check(2,scope.row.id)'>拒绝</el-button>
+        </template>
+        </el-table-column>
+    </el-table>
+      <el-pagination
+      background
+      v-show="pageShow"
+      style="text-align:center;" class="mt20"
+      @current-change="handleCurrentChange"
+      :current-page.sync="currentPage"
+      :page-size="currentPageSize"
+      layout="prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+ </div>
+</template>
+<script>
+  import {customerCheckPageList,customerAgree,customerRefuse} from '../../config/api'
+   export default{
+        data(){
+            return{
+                project:[],
+                formInline: {
+                name:'',
+                time:'',
+                state:''
+                },  
+                loading:true,
+                tableData:[],
+                // 分页
+                pageShow:false,
+                total: 0,
+                currentPage: 1,
+                currentPageSize: 10,
+            }
+        },
+        created () {     
+          this.customerCheckPageList();
+        },
+        methods:{
+               //查询
+                query(){
+                this.loading=true;
+                this.currentPage = 1;
+                this.customerCheckPageList()
+                },
+                reset() {
+                    // 重置
+                    this.formInline = {
+                    name:'',
+                    time:'',
+                    state:''
+                    }
+                    this.customerCheckPageList()
+                },
+                customerCheckPageList(){
+                    customerCheckPageList({
+                        name :this.formInline.name,
+                        applyStartTime :this.formInline.time==null?'':this.formInline.time[0],
+                        applyEndTime :this.formInline.time==null?'':this.formInline.time[1],
+                        state:this.formInline.state, 
+                        pageSize:this.currentPageSize,
+                        pageIndex:this.currentPage 
+                    }).then((resp) => {
+                        console.log(resp)
+                        this.loading=false;
+                        if(resp.code=="1"){
+                        this.tableData=resp.data.list
+                        this.total = parseInt(resp.data.total);
+                            if(this.total>10){
+                                this.pageShow=true
+                            }else{
+                                this.pageShow=false
+                            }
+                        }else{
+                            this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                        }
+                    }); 
+                },
+                state(status){
+                    switch (status) {
+                            case 0:
+                            return {value: '未处理', type: 'warning'}
+                            case 1:
+                            return {value: '已批准', type: 'success'}
+                            case 2:
+                            return {value: '已拒绝', type: 'danger'}
+                            default:
+                            return {value: '未处理', type: '未处理'}     
+                        }
+                },
+
+                 //分页
+                handleCurrentChange(val) {
+                    this.loading=true      
+                    this.currentPage = val;
+                    this.customerCheckPageList();
+                },
+                 //通过和拒绝审核
+                check(state,id){
+                    if(state==1){
+                    this.$confirm('是否确定通过该用户审核?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                    }).then(() => {
+                    customerAgree({id:id}).then((resp)=>{
+                    if(resp.code==1){
+                        this.$message({
+                        type: 'success',
+                        message: '通过审核成功!',
+                        duration:1000
+                    });
+                    this.customerCheckPageList();
+                    }else{
+                        this.$alert('通过审核失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                    }
+                        })
+                    
+                    }).catch(() => {});
+                    }else{
+                    this.$confirm('是否确定拒绝该用户审核?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                    }).then(() => {
+                    customerRefuse({id:id}).then((resp)=>{
+                    if(resp.code==1){
+                        this.$message({
+                        type: 'success',
+                        message: '拒绝审核成功!',
+                        duration:1000
+                    });
+                    this.customerCheckPageList();
+                    }else{
+                        this.$alert('拒绝审核失败', '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                    }
+                        })
+                    
+                    }).catch(() => {});
+                    }
+                
+
+                },
+                open(url){
+                     this.$alert(
+                         `<div>
+                         <img src="">
+                         </div>`,
+                         '认证图片', {
+                        dangerouslyUseHTMLString: true,
+                        showConfirmButton:false
+                        }).then(() => {}).catch(() => {});
+                },
+
+        }
+
+   }
+</script>

@@ -1,0 +1,62 @@
+<template>
+ <div class='role'>
+      <el-form :inline="true" class="demo-form-inline">         
+        <el-form-item>
+           <el-input v-model="name" placeholder="请输入角色名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button
+            type="primary"
+            @click="getTable()"
+            style="margin-left: 10px"
+            >提交</el-button>
+          <el-button type="primary" @click="$router.push({path: '/station/addStation/0'})">新增角色</el-button>
+        </el-form-item>
+      </el-form>
+         <el-table
+          v-loading="loading"
+          :data="list"
+          style="width: 100%"
+          border>
+          <el-table-column
+            prop="name"
+            label="角色名称"
+            width="250" />
+          <el-table-column
+            prop="projectName"
+            label="角色说明"
+            width="250" />
+          <el-table-column
+            prop="projectAddress"
+            label="归属机构" />
+          <el-table-column 
+            label="操作"
+            width="300"
+            fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                size="small"
+                type="text"
+                @click="$router.push({
+                  path: '/station/addStation/' + scope.row.id,
+                  query: {page: currentPage}
+                })">编辑</el-button>
+              <el-button
+                size="small"
+                type="text"
+               >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>     
+ </div>
+</template>
+<script>
+export default{
+    data(){
+        return{
+           name:'',
+           tableData: [],
+        }
+    }
+}
+</script>

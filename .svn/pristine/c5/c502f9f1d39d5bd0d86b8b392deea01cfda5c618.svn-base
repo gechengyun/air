@@ -1,0 +1,154 @@
+<template>
+  <div class="stationPic">
+    <el-form :inline="true" class="demo-form-inline">
+      <el-form-item>
+         <el-upload
+          class="upload-demo"
+          :action="uploadLink + 'customer/upload'"
+          :show-file-list="false"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload"
+           >
+          <el-button type="primary">点击上传</el-button>
+          <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+          </el-upload>
+      </el-form-item>
+      <el-form-item>
+          <el-button type="primary">保存</el-button>
+      </el-form-item>
+    </el-form>
+    <el-row>
+      <el-col :span="16">
+           <div class="container">
+             <div class="div" v-show="this.licensePic==''?true:false">
+               
+             </div>
+            <img :src="licensePic" class="model" v-show="this.licensePic==''?false:true">                
+	     	  </div>
+          <div style="border:1px solid red">
+            <img class="draggable icon" src="/static/img/icon.png">
+          </div>           
+      </el-col>
+      <el-col :span="8">
+         <el-table
+          :data="tableData"
+          style="width: 100%"
+          border>
+          <el-table-column
+            prop="name"
+            label="设备名称"
+            />
+          <el-table-column
+            label="图标"
+           >
+           <template slot-scope="scope">
+            <img src="/static/img/icon.png">
+           </template>
+          </el-table-column>
+            <el-table-column
+            prop="remark"
+            label="操作"
+           >
+           <template slot-scope="scope">
+            <el-button
+              type="text"
+              size="small"
+           
+              >
+              放置图标
+            </el-button>
+           </template>
+      </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+  </div>
+
+  
+</template>
+
+<script>
+import config from '../../config'
+import {isLegalImg} from '../../config/common'
+export default {
+  name: 'stationPic',
+  data () {
+    return {
+     tableData: [{
+            name: '温度测点1',
+          }, {
+            name: '温度测点2',
+           
+          }],
+          fileList: [],
+          uploadLink: config.baseUrl,
+          licensePic:'',
+    }
+  },
+  mounted () {
+    this.points()
+  },
+  methods: {
+     points(){
+       let draggable = $('.draggable').draggabilly({ containment: ".container" });
+      draggable.on( 'dragMove', function( event, pointer ) {
+      
+        // console.log($(this).offset())  
+      })
+     
+     },
+   
+    handleAvatarSuccess (res, file) {
+          console.log(res)
+      // 上传成功
+      this.picDisabled = false
+      this.$message.success('上传成功！')
+      this.licensePic=res.msg+res.data;
+      // this.infoForm.licensePic = URL.createObjectURL(file.raw)
+    },
+    beforeAvatarUpload (file) {      
+      if(this.licensePic!==''){         
+          return this.$confirm('已有工艺图，再次上传将替换原现在的工艺图, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+            isLegalImg(this, file, () => {
+           this.$message.warning('上传中...')
+           this.picDisabled = true
+      })
+        });
+      }else{
+          return   isLegalImg(this, file, () => {
+           this.$message.warning('上传中...')
+           this.picDisabled = true
+      });
+      }
+            
+    },
+    
+  }
+}
+</script>
+
+<style scoped>
+   .container{
+     width:100%;height:700px;position:relative;
+     background: #ffffff;
+   }
+   .model{
+     position:absolute; width: 100%;
+    height: 100%;
+   }
+   .div{
+     width: 380px;
+     height: 200px;
+     background: url("/static/img/upload_bg.png")no-repeat center center;
+     margin: 0 auto;
+     padding-top: 450px;
+   }
+   /* .icon{
+     position:absolute;left:50%;top:50%;
+   } */
+</style>
+

@@ -1,0 +1,82 @@
+<template>
+  <div class="addStation">
+    <el-form
+      :model="infoForm"
+      v-loading="loading"
+      :rules="rules"
+      ref="infoForm"
+      label-width="130px">
+      <el-row>
+        <el-col :span="24"><h3>基本信息</h3></el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="空调站点名称：" prop="name">
+            <el-input
+              type="text"
+              maxLength="20"
+              placeholder="请输入中央空调名称（不超过20位字符）"
+              v-model.trim="infoForm.name" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="归属项目：" prop="project">
+            <el-select
+              v-model="infoForm.project"
+              placeholder="请选择项目"
+              :change="getProject()">
+              <el-option
+                v-for="item in projectList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.name">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24"><h3>物联网采集网关及关联控制器信息</h3></el-col>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import {
+  getListByUser,
+  projectGetUserProjects
+} from '../../config/api'
+export default {
+  name: 'addStation',
+  data () {
+    return {
+      loading: true, // loading
+      infoForm: {
+        id: 0, // id
+        name: '', // 名称
+        location: '', // 安装位置
+        project: 0, // 项目
+      },
+      projectList: [], // 项目列表
+      rules: {
+        name: [{required: true, message: '请输入中央空调名称', trigger: 'blur'}]
+      },
+    }
+  },
+  methods: {
+    getData () {
+      // 获取表单内容
+    },
+    getProject () {}
+  },
+  created () {
+    this.$route.params.id == 0 ? this.getData() : this.loading = false
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

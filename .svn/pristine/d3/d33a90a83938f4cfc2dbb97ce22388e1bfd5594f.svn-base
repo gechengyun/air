@@ -1,0 +1,98 @@
+<template>
+  <div class='dashboard'>
+    <el-row>
+      <el-col :span="24"><h4>中央空调远程监控分布图</h4></el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="12"><div style="line-height: 40px; font-size: 14px;">空调总台数：1000台&nbsp;&nbsp;&nbsp;&nbsp;正常：900台&nbsp;&nbsp;&nbsp;&nbsp;故障报警：<span style="color: red">50</span>台&nbsp;&nbsp;&nbsp;&nbsp;断线：50台</div></el-col>
+      <el-col :span="12" style="line-height: 40px; text-align: right">
+          报警: <div class="markPic" style="background: #F56C6C"></div>
+          正常: <div class="markPic" style="background: #409EFF"></div>
+          断线: <div class="markPic" style="background: #909399"></div>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
+        <div class="grid-content bg-purple-dark" style="height:900px; border: 1px solid #666" id="allmap"></div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+<script>
+  export default {
+    name: 'dashboard',
+    data () {
+        return {
+
+        }
+    },
+    mounted() {
+      this.fetchData();
+      this.mapview();
+    },
+    methods: {
+      fetchData() {
+        //projectlist()
+      },
+      mapview() {
+        // 百度地图API功能
+        let map = new BMap.Map("allmap") // 创建Map实例
+        map.centerAndZoom(new BMap.Point(117.233443, 31.826578), 13) // 初始化地图,设置中心点坐标和地图级别
+        map.addControl(new BMap.NavigationControl()) //添加地图类型控件
+        map.enableScrollWheelZoom(true) //开启鼠标滚轮缩放
+        // 创建信息窗口对象
+        var infoWindow = new BMap.InfoWindow(
+            `<div>
+                <img src="http://pcsv0.map.bdimg.com/pr/?qt=poiprv&uid=c16534057ce48260ab175a44&width=323&height=101&quality=80&fovx=200" />
+                <h3 style="font-size: 12px">报警情况：</h3>
+                <p style="font-size: 12px; color: #F56C6C;">大厅空调(编号001)：报警</p>
+                <p style="font-size: 12px; color: #409EFF">大厅空调(编号002)：正常</p>
+                <p style="font-size: 12px; color: #909399">大厅空调(编号003)：断线</p>
+            </div>`, {
+            width : 250,
+            height: 250,
+            offset: {
+                width: 0,
+                height: -15
+            },
+            title : `<div style="font-size: 14px; color: rgb(77, 77, 77); font-weight: bold; text-decoration: none;">XXXX公司大厅空调</div>`, 
+        })
+        // 添加点位1
+        let pt1 = new BMap.Point(117.235443, 31.826578)
+	    let myIcon1 = new BMap.Icon("static/img/icon1.png", new BMap.Size(25, 45))
+        let marker1 = new BMap.Marker(pt1, {icon: myIcon1});  // 创建标注
+        marker1.addEventListener('click', (e) => marker1.openInfoWindow(infoWindow))
+        map.addOverlay(marker1)
+        // 添加点位2
+        let pt2 = new BMap.Point(117.295943, 31.857578)
+	    let myIcon2 = new BMap.Icon("static/img/icon2.png", new BMap.Size(25, 45))
+	    let marker2 = new BMap.Marker(pt2, {icon: myIcon2});  // 创建标注
+        marker2.addEventListener('click', (e) => marker2.openInfoWindow(infoWindow))
+        map.addOverlay(marker2)
+        // 添加点位3
+        let pt3 = new BMap.Point(117.135443, 31.806578)
+	    let myIcon3 = new BMap.Icon("static/img/icon3.png", new BMap.Size(25, 45))
+	    let marker3 = new BMap.Marker(pt3, {icon: myIcon3});  // 创建标注
+        marker3.addEventListener('click', (e) => marker3.openInfoWindow(infoWindow))
+        map.addOverlay(marker3)
+        // 添加点位4
+        let pt4 = new BMap.Point(117.335443, 31.796578)
+	    let myIcon4 = new BMap.Icon("static/img/icon1.png", new BMap.Size(25, 45))
+	    let marker4 = new BMap.Marker(pt4, {icon: myIcon4});  // 创建标注
+        marker4.addEventListener('click', (e) => marker4.openInfoWindow(infoWindow))
+        map.addOverlay(marker4)
+      }
+    }
+  }
+
+</script>
+
+<style scoped>
+    .markPic {
+      width: 50px;
+      height: 30px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 10px;
+    }
+</style>

@@ -1,0 +1,45 @@
+<template>
+  <div class="uncertified">
+    <el-row>
+      <el-col :span="24">
+        <div class="box">
+          <h2><i class="el-icon-warning"></i> 请完成企业资质认证</h2>
+          <p>请完善企业相关资料，等待审核，</p>
+          <p>我们将尽快与您联系并处理。</p>
+          <p>咨询电话：400-0123-123</p>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row style="text-align: center">
+      <el-col :span="24">
+        <el-button type="primary" @click="$router.push('/customer/infoInput')">立即认证</el-button>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'uncertified',
+  data () {
+    return {
+
+    }
+  }
+}
+</script>
+
+<style scoped>
+  .box {
+    width: 300px;
+    margin: 200px auto 20px;
+  }
+  h2 {
+    text-align: center
+  }
+  p {
+    padding-left: 57px
+  }
+</style>
+
+

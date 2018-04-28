@@ -1,0 +1,19 @@
+<template>
+  <div class="journal"></div>
+</template>
+
+<script>
+export default {
+  name: 'journal',
+  data () {
+    return {
+
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

@@ -1,0 +1,127 @@
+/* 公共的css */
+
+.fl {
+    float: left;
+}
+
+.fr {
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
+
+
+/*外边距*/
+
+.mt0 {
+    margin-top: 0px;
+}
+
+.mt2 {
+    margin-top: 2px;
+}
+
+.mt5 {
+    margin-top: 5px;
+}
+
+.mt10 {
+    margin-top: 10px;
+}
+
+.mt15 {
+    margin-top: 15px;
+}
+
+.mt20 {
+    margin-top: 20px;
+}
+
+.mt25 {
+    margin-top: 25px;
+}
+
+.mt30 {
+    margin-top: 30px;
+}
+
+.mt35 {
+    margin-top: 35px;
+}
+
+.mt40 {
+    margin-top: 40px;
+}
+
+.mt45 {
+    margin-top: 45px;
+}
+
+.mt50 {
+    margin-top: 50px;
+}
+
+.mt55 {
+    margin-top: 55px;
+}
+
+.ml0 {
+    margin-left: 0px !important;
+}
+
+.ml5 {
+    margin-left: 5px;
+}
+
+.ml10 {
+    margin-left: 10px;
+}
+
+.ml15 {
+    margin-left: 15px;
+}
+
+.ml20 {
+    margin-left: 20px;
+}
+
+.ml25 {
+    margin-left: 25px;
+}
+
+.ml30 {
+    margin-left: 30px;
+}
+
+.ml35 {
+    margin-left: 35px;
+}
+
+.ml40 {
+    margin-left: 40px;
+}
+
+.ml45 {
+    margin-left: 45px;
+}
+
+.ml50 {
+    margin-left: 50px;
+}
+
+.ml55 {
+    margin-left: 55px;
+}
+
+
+/* 文字 */
+
+.a {
+    cursor: pointer
+}
+
+.fs16 {
+    font-size: 16px
+}

@@ -1,0 +1,225 @@
+<template>
+ <div class='addpoints'>
+     <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm demo-form-inline" v-loading="loading">
+ 
+      <el-row>
+          <el-col :span="12">
+          <el-form-item label="归属项目" prop="projectId">
+              <el-select v-model="ruleForm.projectId" placeholder="请选择归属项目">
+                <el-option
+                  v-for="item in project"
+                  :key="item.id"
+                  :label="item.projectName"
+                  :value="item.id"
+                  ></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+          <el-col :span="12">
+          <el-form-item label="归属空调站点" prop="airStationId" label-width="130px">
+              <el-select v-model="ruleForm.airStationId" placeholder="请选择归属空调站点">
+              <el-option
+              v-for="item in stations"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+              ></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        
+        <el-col :span="12">
+          <el-form-item label="测点编码" prop="code">
+            <el-input v-model="ruleForm.code" placeholder="请输入测点ID（不超过20位字符）"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="测点名称" prop="name"  label-width="130px">
+            <el-input v-model="ruleForm.name" placeholder="请输入测点名称（不超过20位字符）"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>   
+      <el-row>
+       <el-col :span="12">
+          <el-form-item label="归属设备">
+            <el-select v-model="ruleForm.equipmentId" placeholder="请选择归属设备">
+            <el-option
+                  v-for="item in equipment"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+            ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="测点类型" prop="observationType" label-width="130px">
+            <el-select v-model="ruleForm.observationType" placeholder="请选择测点类型">
+              <el-option
+                  v-for="item in points"
+                  :key="item.id"
+                  :label="item.dictTypeName"
+                  :value="item.id"
+                  ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+   
+    
+     
+      <el-form-item style="text-align:center">
+        <el-button type="primary" @click="submitForm('ruleForm')">保存</el-button>
+        <!-- <el-button @click="resetForm('ruleForm')">重置</el-button> -->
+         <el-button  @click="$router.push({path:'/points',query:{page:$route.query.page}})">关闭</el-button>
+      </el-form-item>
+</el-form>
+ </div>
+</template>
+<script>
+import {getUserProjects,getObservationLocationDict,pointsGetOne,pointsAdd,pointsUpdate,equipmentlistselect,stationGetListByUser} from '../../config/api'
+  export default {
+    data() {
+      return {
+         project:[],
+         points:[],
+         stations:[],
+         equipment:[],
+        ruleForm: {
+          projectId:'',
+          airStationId:'',
+          name: '',
+          code: '',
+          observationType:'',
+          equipmentId:'',        
+        },
+         loading:true,
+        rules: {
+          projectId:[
+           { required: true, message: '请选择归属项目', trigger: 'change' }
+          ],
+          airStationId:[
+           { required: true, message: '请选择空调站点', trigger: 'change' }
+          ],
+          name: [
+            { required: true, message: '请输入测点名称', trigger: 'blur' },
+             { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          code: [
+            { required: true, message: '请输入测点编码', trigger: 'blur' },
+            { max: 20, message: '长度不能超过20个字符', trigger: 'blur' }
+          ],
+          observationType:[
+           { required: true, message: '请选择测点类型', trigger: 'change' }
+          ],
+                  
+        }
+      };
+    },
+    created () {
+       //获取下拉框的值
+      this.getSelectValue();
+        if(this.$route.params.id!=undefined){
+        this.views()
+      }else{
+         this.loading=false;
+      }
+    
+    },
+    methods: {
+       getSelectValue(){
+        getUserProjects().then((resp)=>{
+         this.project=resp.data
+       }),
+        getObservationLocationDict().then((resp)=>{
+         this.points=resp.data
+       }),
+       equipmentlistselect().then((resp)=>{
+          this.equipment=resp.data
+       }),
+       stationGetListByUser().then((resp)=>{
+          this.stations=resp.data
+       })
+      },
+      views(){
+         pointsGetOne({
+           id:this.$route.params.id
+         }).then((resp)=>{
+           this.ruleForm={
+          projectId:resp.data.projectId,
+          airStationId:resp.data.airStationId,
+          name:resp.data.name,
+          code:resp.data.code,
+          observationType:resp.data.observationType,
+          equipmentId:resp.data.equipmentId,        
+            }, 
+          this.$nextTick().then(() => {
+            setTimeout(() => {
+              this.loading=false;
+            }, 100);
+          })
+          })    
+      },
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+                   this.disabled=true
+            if(this.$route.params.id!=undefined){           
+              Object.assign(this.ruleForm,{id:parseInt(this.$route.params.id)})
+              pointsUpdate(this.ruleForm).then((resp)=>{
+                  setTimeout(()=>{
+                      this.disabled=false
+                   },2000) 
+                if(resp.code==1){
+                    this.$message({
+                       message: '修改成功',
+                       type: 'success',
+                       duration:2000
+                        });
+                       setTimeout(()=>{
+                         this.$router.push({path:'/points'}) 
+                   },2000) 
+                }else{
+                    this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+
+            }else{
+               pointsAdd(this.ruleForm).then((resp)=>{
+                  setTimeout(()=>{
+                      this.disabled=false
+                   },2000) 
+                if(resp.code==1){
+                  console.log(resp)
+                    this.$message({
+                       message: '新增成功',
+                       type: 'success',
+                       duration:2000
+                        });
+                       setTimeout(()=>{
+                         this.$router.push({path:'/points'}) 
+                   },2000) 
+                }else{
+                    this.$alert(resp.msg, '提示', {type: 'error'}).then(() => {}).catch(() => {});
+                }
+            })
+          }
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      }
+    }
+  }
+</script>
+<style scoped>
+     .el-select{
+         width:100%
+     }
+</style>
